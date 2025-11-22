@@ -1,0 +1,5 @@
+{
+  "name": "𝑴𝒖𝒔𝒆 𝑪𝒍𝒖𝒃 接单记账助手",
+  "description": "接单截图智能记账工具。支持自动OCR识别、收入自动分账、重复订单检测及财务报表统计。",
+  "requestFramePermissions": []
+}
