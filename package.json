@@ -1,24 +1,36 @@
 {
-  "name": "𝑴𝒖𝒔𝒆-𝑪𝒍𝒖𝒃-接单记账助手",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "muse-club-accounting",
+  "version": "1.0.0",
+  "description": "Muse Club Accounting Helper",
+  "main": "index.tsx",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "recharts": "^3.4.1",
-    "react-dom": "^19.2.0",
-    "@google/genai": "^1.30.0",
-    "lucide-react": "^0.554.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "@google/genai": "^0.1.0",
+    "lucide-react": "^0.292.0",
+    "recharts": "^2.10.3",
+    "@vercel/speed-insights": "^1.0.10",
+    "typescript": "^4.9.5",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
   },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
