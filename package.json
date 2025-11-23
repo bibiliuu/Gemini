@@ -1,6 +1,7 @@
 {
   "name": "muse-club-accounting",
   "version": "1.0.0",
+  "type": "module",
   "description": "Muse Club Accounting Helper",
   "main": "index.tsx",
   "scripts": {
