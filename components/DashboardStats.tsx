@@ -316,27 +316,36 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
 
       {/* Individual Leaderboard - Available to ALL, but actions restricted */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Responsive Header for Mobile */}
         <div 
-          className="p-6 border-b border-gray-100 flex justify-between items-center hover:bg-gray-50 transition-colors"
+          className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:bg-gray-50 transition-colors"
         >
+          {/* Title Section */}
           <div 
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-             <Trophy className="w-5 h-5 text-yellow-500" />
-             <h3 className="text-lg font-bold text-gray-800">
-               人员收入排行 (Top 20)
-               {selectedMonth !== 'ALL' && <span className="text-sm font-normal text-gray-500 ml-2 bg-gray-100 px-2 py-0.5 rounded-full">{selectedMonth}</span>}
-             </h3>
+             <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
+             <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-lg font-bold text-gray-800">
+                  人员收入排行 (Top 20)
+                </h3>
+                {selectedMonth !== 'ALL' && (
+                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    {selectedMonth}
+                  </span>
+                )}
+             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          {/* Actions Section */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
              {/* ADMIN ONLY ACTIONS */}
              {isAdmin && (
                <>
                 <button
                   onClick={handleExportExcel}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors whitespace-nowrap"
                   title="导出为 Excel (.xls)"
                 >
                   <Download className="w-3 h-3" />
@@ -345,7 +354,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
 
                 <button
                   onClick={handleCopyLeaderboard}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors whitespace-nowrap"
                   title="复制榜单到剪贴板"
                 >
                   {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -354,7 +363,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
                </>
              )}
 
-            <button onClick={() => setIsExpanded(!isExpanded)} className="text-gray-400 p-1 hover:text-gray-600">
+            <button onClick={() => setIsExpanded(!isExpanded)} className="text-gray-400 p-1 hover:text-gray-600 ml-auto sm:ml-0">
               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
           </div>

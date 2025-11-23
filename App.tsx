@@ -597,81 +597,86 @@ const App: React.FC = () => {
 
         {/* Active Transactions List */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-12">
-          <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 whitespace-nowrap">
-                <FileText className="w-5 h-5 text-gray-400" />
-                账单记录
-              </h2>
+          {/* Responsive Table Header */}
+          <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               
-              {/* Status Filters */}
-              <div className="flex gap-2 shrink-0 overflow-x-auto pb-1 md:pb-0">
-                 <button 
-                    onClick={() => setStatusFilter('all')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                        statusFilter === 'all' 
-                        ? 'bg-gray-800 text-white border-gray-800 shadow-md' 
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-                    }`}
-                 >
-                    全部 ({activeTransactions.length})
-                 </button>
-                 <button 
-                    onClick={() => setStatusFilter('pending')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                        statusFilter === 'pending' 
-                        ? 'bg-yellow-500 text-white border-yellow-600 shadow-md' 
-                        : 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100'
-                    }`}
-                 >
-                    待审核 ({activeTransactions.filter(t => t.status === 'pending').length})
-                 </button>
-                 <button 
-                    onClick={() => setStatusFilter('approved')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                        statusFilter === 'approved' 
-                        ? 'bg-green-600 text-white border-green-700 shadow-md' 
-                        : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                    }`}
-                 >
-                    已批准 ({activeTransactions.filter(t => t.status === 'approved').length})
-                 </button>
-                 <button 
-                    onClick={() => setStatusFilter('paid')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                        statusFilter === 'paid' 
-                        ? 'bg-purple-600 text-white border-purple-700 shadow-md' 
-                        : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
-                    }`}
-                 >
-                    已付 ({activeTransactions.filter(t => t.status === 'paid').length})
-                 </button>
+              {/* Title and Filters */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto overflow-hidden">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2 whitespace-nowrap">
+                  <FileText className="w-5 h-5 text-gray-400" />
+                  账单记录
+                </h2>
+                
+                {/* Status Filters - Scrollable on mobile */}
+                <div className="flex gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 pr-4">
+                   <button 
+                      onClick={() => setStatusFilter('all')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shrink-0 ${
+                          statusFilter === 'all' 
+                          ? 'bg-gray-800 text-white border-gray-800 shadow-md' 
+                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                      }`}
+                   >
+                      全部 ({activeTransactions.length})
+                   </button>
+                   <button 
+                      onClick={() => setStatusFilter('pending')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shrink-0 ${
+                          statusFilter === 'pending' 
+                          ? 'bg-yellow-500 text-white border-yellow-600 shadow-md' 
+                          : 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100'
+                      }`}
+                   >
+                      待审核 ({activeTransactions.filter(t => t.status === 'pending').length})
+                   </button>
+                   <button 
+                      onClick={() => setStatusFilter('approved')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shrink-0 ${
+                          statusFilter === 'approved' 
+                          ? 'bg-green-600 text-white border-green-700 shadow-md' 
+                          : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                      }`}
+                   >
+                      已批准 ({activeTransactions.filter(t => t.status === 'approved').length})
+                   </button>
+                   <button 
+                      onClick={() => setStatusFilter('paid')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shrink-0 ${
+                          statusFilter === 'paid' 
+                          ? 'bg-purple-600 text-white border-purple-700 shadow-md' 
+                          : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                      }`}
+                   >
+                      已付 ({activeTransactions.filter(t => t.status === 'paid').length})
+                   </button>
+                </div>
               </div>
-            </div>
 
-            {/* Search & Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              {/* Bulk Delete Active/Visible - ADMIN ONLY */}
-              {isAdmin && visibleTransactions.length > 0 && (
-                 <button
-                   onClick={handleDeleteVisible}
-                   className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors whitespace-nowrap"
-                 >
-                   <Trash2 className="w-3.5 h-3.5" />
-                   清空{statusFilter !== 'all' ? '当前' : '全部'}
-                 </button>
-              )}
+              {/* Search & Actions */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                {/* Bulk Delete Active/Visible - ADMIN ONLY */}
+                {isAdmin && visibleTransactions.length > 0 && (
+                   <button
+                     onClick={handleDeleteVisible}
+                     className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors whitespace-nowrap"
+                   >
+                     <Trash2 className="w-3.5 h-3.5" />
+                     清空{statusFilter !== 'all' ? '当前' : '全部'}
+                   </button>
+                )}
 
-              {/* Search Bar */}
-              <div className="relative w-full md:w-64">
-                <input
-                  type="text"
-                  placeholder="搜索姓名、内容..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900"
-                />
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                {/* Search Bar */}
+                <div className="relative w-full md:w-64">
+                  <input
+                    type="text"
+                    placeholder="搜索姓名、内容..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900"
+                  />
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                </div>
               </div>
             </div>
           </div>
