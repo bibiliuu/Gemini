@@ -1,0 +1,1 @@
+{"name":"gemini-server","version":"1.0.0","type":"module","main":"index.js","scripts":{"start":"node index.js","dev":"nodemon index.js"},"dependencies":{"@google/genai":"^0.2.0","cors":"^2.8.5","dotenv":"^16.6.1","express":"^4.18.2","pg":"^8.16.3"}}

@@ -1,21 +1,11 @@
-// Manually define environment types since vite/client is not available
-
-declare namespace NodeJS {
-  interface ProcessEnv {
-    API_KEY: string;
-    [key: string]: string | undefined;
-  }
-}
+/// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly API_KEY: string;
-  readonly BASE_URL: string;
-  readonly MODE: string;
-  readonly DEV: boolean;
-  readonly PROD: boolean;
-  readonly SSR: boolean;
+  readonly DEV: boolean
+  readonly PROD: boolean
+  readonly MODE: string
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  readonly env: ImportMetaEnv
 }

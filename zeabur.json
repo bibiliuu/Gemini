@@ -1,0 +1,9 @@
+{
+    "serviceName": "gemini-app",
+    "build": {
+        "command": "npm install && npm run build"
+    },
+    "start": {
+        "command": "npm start"
+    }
+}
