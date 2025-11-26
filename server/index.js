@@ -111,7 +111,7 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// 4. Gemini Proxy
+// 4. Gemini Proxy (Via Cloudflare Worker)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
@@ -120,8 +120,10 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }, { apiVersion: 'v1beta' });
+    // Use Cloudflare Worker Proxy to bypass region blocks
+    const PROXY_URL = "https://gemini-proxy.bbliu131.workers.dev";
+    const MODEL = "gemini-1.5-flash"; // Stable model
+    const API_URL = `${PROXY_URL}/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const prompt = `
       Analyze this WeChat screenshot containing an order form (下单表).
@@ -129,13 +131,31 @@ app.post('/api/analyze', async (req, res) => {
       Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
     `;
 
-    const result = await model.generateContent([
-      prompt,
-      { inlineData: { data: base64Image, mimeType } }
-    ]);
+    const requestBody = {
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inline_data: { mime_type: mimeType, data: base64Image } }
+        ]
+      }]
+    };
 
-    const response = await result.response;
-    const text = response.text();
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API Error:", errorText);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    // Extract text from response
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
 
     // Clean markdown if present
     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
@@ -143,7 +163,7 @@ app.post('/api/analyze', async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("Gemini Analysis Failed:", error);
     res.status(500).json({ error: "AI Analysis Failed" });
   }
 });
