@@ -117,54 +117,55 @@ app.post('/api/analyze', async (req, res) => {
 
   // Use DASHSCOPE_API_KEY
   // const apiKey = process.env.DASHSCOPE_API_KEY;
-  const apiKey = "sk-f13d7c7180c84890b78db2a632f126fc"; // Hardcoded for testing
+  const apiKey = "sk-7122818ee971436986320acca9e88b05"; // New Chinese Key
 
   if (!apiKey) {
     return res.status(500).json({ error: "Server missing DASHSCOPE_API_KEY" });
   }
 
   try {
-    console.log("Analyzing with Qwen-VL-Max (Native API)...");
+    console.log("Analyzing with Qwen-VL-Max (Chinese API)...");
 
-    const response = await fetch("https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation", {
+    // Chinese OpenAI-Compatible Endpoint
+    const response = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`, // Native API also uses Bearer
-        "Content-Type": "application/json",
-        "X-DashScope-WorkSpace": "default" // Try specifying workspace if needed
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         "model": "qwen-vl-max",
-        "input": {
-          "messages": [
-            {
-              "role": "user",
-              "content": [
-                {
-                  "text": `Analyze this WeChat screenshot containing an order form (下单表).
-                  Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-                  Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
-                  ONLY return the JSON object, no markdown.`
-                },
-                { "image": `data:${mimeType};base64,${base64Image}` } // Native format uses "image" key
-              ]
-            }
-          ]
-        },
-        "parameters": {
-          "result_format": "message"
-        }
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": `Analyze this WeChat screenshot containing an order form (下单表).
+                Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
+                Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+                ONLY return the JSON object, no markdown.`
+              },
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": `data:${mimeType};base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ]
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Aliyun Native API Error:", errorText);
+      console.error("Aliyun API Error:", errorText);
       throw new Error(`API Error: ${response.status} ${errorText}`);
     }
 
     const result = await response.json();
-    const text = result.output.choices[0].message.content[0].text; // Native response structure
+    const text = result.choices[0].message.content;
 
     // Clean markdown if present
     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
