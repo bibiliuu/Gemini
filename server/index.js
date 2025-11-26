@@ -134,7 +134,7 @@ app.post('/api/analyze', async (req, res) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        "model": "qwen-vl-max",
+        "model": "qwen-vl-plus", // Switched to Plus version (more widely available)
         "messages": [
           {
             "role": "user",
