@@ -111,51 +111,59 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// 4. Gemini Proxy (Via Cloudflare Worker)
+// 4. AI Analysis (Via OpenRouter)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
-  if (!process.env.GEMINI_API_KEY) {
+  // Use OPENROUTER_API_KEY if available, otherwise fallback to GEMINI_API_KEY (if using direct)
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
     return res.status(500).json({ error: "Server missing API Key" });
   }
 
   try {
-    // Use Cloudflare Worker Proxy to bypass region blocks
-    const PROXY_URL = "https://gemini-proxy.bbliu131.workers.dev";
-    const MODEL = "gemini-1.5-flash-001"; // Specific version
-    const API_URL = `${PROXY_URL}/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-
-    const prompt = `
-      Analyze this WeChat screenshot containing an order form (下单表).
-      Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-      Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
-    `;
-
-    const requestBody = {
-      contents: [{
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType, data: base64Image } }
-        ]
-      }]
-    };
-
-    const response = await fetch(API_URL, {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody)
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/bibiliuu/Gemini", // Required by OpenRouter
+        "X-Title": "Muse Club Helper"
+      },
+      body: JSON.stringify({
+        "model": "google/gemini-flash-1.5",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": `Analyze this WeChat screenshot containing an order form (下单表).
+                Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
+                Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+                ONLY return the JSON object, no markdown.`
+              },
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": `data:${mimeType};base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ]
+      })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini API Error:", errorText);
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      console.error("OpenRouter API Error:", errorText);
+      throw new Error(`API Error: ${response.status} ${errorText}`);
     }
 
     const result = await response.json();
-
-    // Extract text from response
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    const text = result.choices[0].message.content;
 
     // Clean markdown if present
     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
@@ -163,8 +171,8 @@ app.post('/api/analyze', async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error("Gemini Analysis Failed:", error);
-    res.status(500).json({ error: "AI Analysis Failed" });
+    console.error("AI Analysis Failed:", error);
+    res.status(500).json({ error: "AI Analysis Failed: " + error.message });
   }
 });
 
