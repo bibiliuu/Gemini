@@ -116,7 +116,8 @@ app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
   // Use DASHSCOPE_API_KEY
-  const apiKey = process.env.DASHSCOPE_API_KEY;
+  // const apiKey = process.env.DASHSCOPE_API_KEY;
+  const apiKey = "sk-f13d7c7180c84890b78db2a632f126fc"; // Hardcoded for testing
 
   if (!apiKey) {
     return res.status(500).json({ error: "Server missing DASHSCOPE_API_KEY" });
