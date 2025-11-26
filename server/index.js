@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import pg from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -120,8 +120,8 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' }); // Updated to latest flash
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
       Analyze this WeChat screenshot containing an order form (下单表).
