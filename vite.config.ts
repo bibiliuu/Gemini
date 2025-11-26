@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+        }
+      }
+    },
     define: {
       // This ensures your existing code using process.env.API_KEY works in the browser
       'process.env.API_KEY': JSON.stringify(env.API_KEY)
