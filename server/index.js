@@ -123,53 +123,75 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/bibiliuu/Gemini", // Required by OpenRouter
-        "X-Title": "Muse Club Helper"
-      },
-      body: JSON.stringify({
-        "model": "google/gemini-1.5-flash", // Corrected Model ID
-        "messages": [
-          {
-            "role": "user",
-            "content": [
+    const modelsToTry = [
+      "google/gemini-flash-1.5-8b",
+      "google/gemini-flash-1.5",
+      "google/gemini-pro-1.5"
+    ];
+
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Trying model: ${model}...`);
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/bibiliuu/Gemini",
+            "X-Title": "Muse Club Helper"
+          },
+          body: JSON.stringify({
+            "model": model,
+            "messages": [
               {
-                "type": "text",
-                "text": `Analyze this WeChat screenshot containing an order form (下单表).
-                Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-                Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
-                ONLY return the JSON object, no markdown.`
-              },
-              {
-                "type": "image_url",
-                "image_url": {
-                  "url": `data:${mimeType};base64,${base64Image}`
-                }
+                "role": "user",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": `Analyze this WeChat screenshot containing an order form (下单表).
+                    Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
+                    Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+                    ONLY return the JSON object, no markdown.`
+                  },
+                  {
+                    "type": "image_url",
+                    "image_url": {
+                      "url": `data:${mimeType};base64,${base64Image}`
+                    }
+                  }
+                ]
               }
             ]
-          }
-        ]
-      })
-    });
+          })
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenRouter API Error:", errorText);
-      throw new Error(`API Error: ${response.status} ${errorText}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(`Model ${model} failed: ${errorText}`);
+          lastError = new Error(`API Error: ${response.status} ${errorText}`);
+          continue; // Try next model
+        }
+
+        const result = await response.json();
+        const text = result.choices[0].message.content;
+
+        // Clean markdown if present
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
+        const data = JSON.parse(jsonStr);
+
+        return res.json(data); // Success! Return immediately.
+
+      } catch (error) {
+        console.warn(`Model ${model} error: ${error.message}`);
+        lastError = error;
+      }
     }
 
-    const result = await response.json();
-    const text = result.choices[0].message.content;
+    // If all models failed
+    throw lastError || new Error("All models failed");
 
-    // Clean markdown if present
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
-    const data = JSON.parse(jsonStr);
-
-    res.json(data);
   } catch (error) {
     console.error("AI Analysis Failed:", error);
     res.status(500).json({ error: "AI Analysis Failed: " + error.message });
