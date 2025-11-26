@@ -124,9 +124,9 @@ app.post('/api/analyze', async (req, res) => {
 
   try {
     const modelsToTry = [
-      "google/gemini-flash-1.5-8b",
+      "qwen/qwen2.5-vl-72b-instruct", // Best for Chinese OCR
       "google/gemini-flash-1.5",
-      "google/gemini-pro-1.5"
+      "openai/gpt-4o-mini"
     ];
 
     let lastError = null;
