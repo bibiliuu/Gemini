@@ -40,6 +40,6 @@ docker compose up -d --build
 echo "🔄 Running Database Migrations..."
 # Wait for DB to be ready
 sleep 10
-docker compose exec app node migrate.js
+docker compose exec app node server/migrate.js
 
 echo "🎉 Deployment Complete! App running on port 3000."
