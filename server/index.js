@@ -168,6 +168,20 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
+// Debug Endpoint: List Available Models
+app.get('/api/debug-models', async (req, res) => {
+  try {
+    const PROXY_URL = "https://gemini-proxy.bbliu131.workers.dev";
+    const API_URL = `${PROXY_URL}/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
+
+    const response = await fetch(API_URL);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Serve Frontend in Production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
