@@ -111,87 +111,64 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// 4. AI Analysis (Via OpenRouter)
+// 4. AI Analysis (Via Aliyun Qwen-VL)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
-  // Use OPENROUTER_API_KEY if available, otherwise fallback to GEMINI_API_KEY (if using direct)
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY;
+  // Use DASHSCOPE_API_KEY
+  const apiKey = process.env.DASHSCOPE_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: "Server missing API Key" });
+    return res.status(500).json({ error: "Server missing DASHSCOPE_API_KEY" });
   }
 
   try {
-    const modelsToTry = [
-      "qwen/qwen2.5-vl-72b-instruct", // Best for Chinese OCR
-      "google/gemini-flash-1.5",
-      "openai/gpt-4o-mini"
-    ];
-
-    let lastError = null;
-
-    for (const model of modelsToTry) {
-      try {
-        console.log(`Trying model: ${model}...`);
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/bibiliuu/Gemini",
-            "X-Title": "Muse Club Helper"
-          },
-          body: JSON.stringify({
-            "model": model,
-            "messages": [
+    console.log("Analyzing with Qwen-VL-Max...");
+    const response = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "qwen-vl-max",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
               {
-                "role": "user",
-                "content": [
-                  {
-                    "type": "text",
-                    "text": `Analyze this WeChat screenshot containing an order form (下单表).
-                    Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-                    Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
-                    ONLY return the JSON object, no markdown.`
-                  },
-                  {
-                    "type": "image_url",
-                    "image_url": {
-                      "url": `data:${mimeType};base64,${base64Image}`
-                    }
-                  }
-                ]
+                "type": "text",
+                "text": `Analyze this WeChat screenshot containing an order form (下单表).
+                Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
+                Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+                ONLY return the JSON object, no markdown.`
+              },
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": `data:${mimeType};base64,${base64Image}`
+                }
               }
             ]
-          })
-        });
+          }
+        ]
+      })
+    });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.warn(`Model ${model} failed: ${errorText}`);
-          lastError = new Error(`API Error: ${response.status} ${errorText}`);
-          continue; // Try next model
-        }
-
-        const result = await response.json();
-        const text = result.choices[0].message.content;
-
-        // Clean markdown if present
-        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
-        const data = JSON.parse(jsonStr);
-
-        return res.json(data); // Success! Return immediately.
-
-      } catch (error) {
-        console.warn(`Model ${model} error: ${error.message}`);
-        lastError = error;
-      }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Aliyun API Error:", errorText);
+      throw new Error(`API Error: ${response.status} ${errorText}`);
     }
 
-    // If all models failed
-    throw lastError || new Error("All models failed");
+    const result = await response.json();
+    const text = result.choices[0].message.content;
 
+    // Clean markdown if present
+    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
+    const data = JSON.parse(jsonStr);
+
+    res.json(data);
   } catch (error) {
     console.error("AI Analysis Failed:", error);
     res.status(500).json({ error: "AI Analysis Failed: " + error.message });
