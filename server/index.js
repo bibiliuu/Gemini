@@ -20,9 +20,10 @@ app.use(express.json({ limit: '50mb' })); // For large image uploads
 
 // Database Connection
 const { Pool } = pg;
+const isInternalDB = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@db:5432');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: (process.env.NODE_ENV === 'production' && !isInternalDB) ? { rejectUnauthorized: false } : false
 });
 
 // Test DB Connection

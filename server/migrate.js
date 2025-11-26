@@ -9,9 +9,10 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const isInternalDB = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@db:5432');
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } // Required for Supabase
+    ssl: isInternalDB ? false : { rejectUnauthorized: false }
 });
 
 const runMigration = async () => {
