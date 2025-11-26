@@ -1,5 +1,4 @@
-# Build Stage
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -7,32 +6,19 @@ WORKDIR /app
 COPY package*.json ./
 COPY server/package*.json ./server/
 
-# Install dependencies (root + server)
-RUN npm install
-RUN cd server && npm install
-
-# Copy source code
-COPY . .
-
-# Build Frontend
-RUN npm run build
-
-# Production Stage
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy built assets and server files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/server ./server
-COPY --from=builder /app/package*.json ./
-
 # Install ONLY production dependencies for server
-WORKDIR /app/server
-RUN npm install --production
+# We don't need root dependencies anymore since we are not building frontend
+RUN cd server && npm install --production
+
+# Copy pre-built frontend assets
+COPY dist ./dist
+
+# Copy server code
+COPY server ./server
 
 # Expose port
 EXPOSE 3000
 
 # Start command
-CMD ["node", "index.js"]
+WORKDIR /app
+CMD ["node", "server/index.js"]
