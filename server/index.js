@@ -132,7 +132,7 @@ app.post('/api/analyze', async (req, res) => {
         "X-Title": "Muse Club Helper"
       },
       body: JSON.stringify({
-        "model": "google/gemini-flash-1.5",
+        "model": "google/gemini-1.5-flash", // Corrected Model ID
         "messages": [
           {
             "role": "user",
