@@ -122,7 +122,7 @@ app.post('/api/analyze', async (req, res) => {
   try {
     // Use Cloudflare Worker Proxy to bypass region blocks
     const PROXY_URL = "https://gemini-proxy.bbliu131.workers.dev";
-    const MODEL = "gemini-1.5-flash-latest"; // Updated to latest alias
+    const MODEL = "gemini-1.5-flash-001"; // Specific version
     const API_URL = `${PROXY_URL}/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const prompt = `
