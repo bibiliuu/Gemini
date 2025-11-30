@@ -293,7 +293,11 @@ function AppContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user)
     });
-    if (!res.ok) throw new Error("Failed to create user");
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Failed to create user:", res.status, errorText);
+      throw new Error(`Failed to create user: ${res.status}`);
+    }
     await fetchUsers();
   };
 
@@ -304,7 +308,11 @@ function AppContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user)
     });
-    if (!res.ok) throw new Error("Failed to update user");
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Failed to update user:", res.status, errorText);
+      throw new Error(`Failed to update user: ${res.status}`);
+    }
     await fetchUsers();
   };
 
@@ -313,7 +321,11 @@ function AppContent() {
     const res = await fetch(`${API_URL}/${id}`, {
       method: 'DELETE'
     });
-    if (!res.ok) throw new Error("Failed to delete user");
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Failed to delete user:", res.status, errorText);
+      throw new Error(`Failed to delete user: ${res.status}`);
+    }
     await fetchUsers();
   };
 
