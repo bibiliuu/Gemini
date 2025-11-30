@@ -1171,7 +1171,7 @@ function AppContent() {
                     placeholder="搜索已拒绝..."
                     value={rejectedSearchTerm}
                     onChange={(e) => setRejectedSearchTerm(e.target.value)}
-                    className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all w-48"
+                    className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all w-full md:w-64"
                   />
                 </div>
                 {isAdmin && rejectedTransactions.length > 0 && (
