@@ -211,9 +211,10 @@ function AppContent() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [rejectedSearchTerm, setRejectedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'paid'>('all');
-
+  const [filterDate, setFilterDate] = useState("");
   // Review Modal State
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -294,9 +295,23 @@ function AppContent() {
     filteredList.filter(t => t.status !== 'rejected'),
     [filteredList]);
 
-  const rejectedTransactions = useMemo(() =>
-    filteredList.filter(t => t.status === 'rejected'),
-    [filteredList]);
+  const rejectedTransactions = useMemo(() => {
+    let list = transactions.filter(t => t.status === 'rejected');
+    if (rejectedSearchTerm.trim()) {
+      const term = rejectedSearchTerm.toLowerCase().trim();
+      list = list.filter(t => {
+        return (
+          t.taker?.toLowerCase().includes(term) ||
+          t.controller?.toLowerCase().includes(term) ||
+          t.superior?.toLowerCase().includes(term) ||
+          t.content?.toLowerCase().includes(term) ||
+          t.orderDate?.toLowerCase().includes(term) ||
+          t.notes?.toLowerCase().includes(term)
+        );
+      });
+    }
+    return list;
+  }, [transactions, rejectedSearchTerm]);
 
   const visibleTransactions = useMemo(() => {
     if (statusFilter === 'all') return activeTransactions;
@@ -1145,15 +1160,27 @@ function AppContent() {
                   {rejectedTransactions.length}
                 </span>
               </div>
-              {isAdmin && (
-                <button
-                  onClick={handleDeleteAllRejected}
-                  className="text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  清空已拒绝
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="搜索已拒绝..."
+                    value={rejectedSearchTerm}
+                    onChange={(e) => setRejectedSearchTerm(e.target.value)}
+                    className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all w-48"
+                  />
+                </div>
+                {isAdmin && rejectedTransactions.length > 0 && (
+                  <button
+                    onClick={handleDeleteAllRejected}
+                    className="text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    清空已拒绝
+                  </button>
+                )}
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-gray-600">
