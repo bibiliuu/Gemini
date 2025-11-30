@@ -334,6 +334,44 @@ function AppContent() {
     setStatusFilter('all');
   };
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1600;
+          const MAX_HEIGHT = 1600;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -342,29 +380,29 @@ function AppContent() {
     setError(null);
 
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        const base64Data = base64String.split(',')[1];
-        try {
-          const analysis = await analyzeScreenshot(base64Data, file.type);
-          setModalState({
-            isOpen: true,
-            mode: 'create',
-            data: analysis,
-            imageUrl: base64String
-          });
-        } catch (err: any) {
-          console.error(err);
-          setError("识别失败。请确保 API Key 配置正确，且图片清晰。");
-        } finally {
-          setIsProcessing(false);
-          event.target.value = '';
-        }
-      };
-      reader.readAsDataURL(file);
+      // Compress image first
+      const compressedBase64 = await compressImage(file);
+      const base64Data = compressedBase64.split(',')[1];
+
+      try {
+        // Send compressed image to AI (faster and reliable)
+        const analysis = await analyzeScreenshot(base64Data, 'image/jpeg');
+        setModalState({
+          isOpen: true,
+          mode: 'create',
+          data: analysis,
+          imageUrl: compressedBase64
+        });
+      } catch (err: any) {
+        console.error(err);
+        setError("识别失败。请确保 API Key 配置正确，且图片清晰。");
+      } finally {
+        setIsProcessing(false);
+        event.target.value = '';
+      }
     } catch (e) {
-      setError("文件读取失败。");
+      console.error("Compression failed", e);
+      setError("图片处理失败，请重试。");
       setIsProcessing(false);
     }
   };
