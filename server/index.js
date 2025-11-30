@@ -139,15 +139,28 @@ app.delete('/api/transactions/:id', async (req, res) => {
   }
 });
 
-// 5. Update Transaction Status/Notes
+// 5. Update Transaction (Full Update)
 app.put('/api/transactions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, notes } = req.body;
-    // Only update status and notes for now
+    const t = req.body;
+
     await pool.query(
-      'UPDATE transactions SET status = $1, notes = $2 WHERE id = $3',
-      [status, notes || '', id]
+      `UPDATE transactions 
+       SET status = $1, notes = $2, amount = $3, taker = $4, controller = $5, superior = $6, order_date = $7, content = $8, distribution = $9
+       WHERE id = $10`,
+      [
+        t.status,
+        t.notes || '',
+        t.amount,
+        t.taker,
+        t.controller,
+        t.superior,
+        t.orderDate,
+        t.content,
+        JSON.stringify(t.distribution),
+        id
+      ]
     );
     res.json({ success: true });
   } catch (err) {

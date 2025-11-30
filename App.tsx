@@ -458,26 +458,65 @@ function AppContent() {
       // Only Admin can approve usually, but this function is called by ReviewModal
       const originalRecord = modalState.data as TransactionRecord;
       const existingId = originalRecord.id;
-      const submissionTimestamp = originalRecord.timestamp || Date.now();
 
-      const approvedRecords: TransactionRecord[] = dataArray.map(d => ({
-        id: generateUUID(),
-        timestamp: submissionTimestamp,
-        imageUrl: modalState.imageUrl,
-        status: 'approved',
-        ...d
-      }));
+      if (dataArray.length === 1) {
+        // Single Update: Reuse ID and Update via PUT
+        const updatedRecord: TransactionRecord = {
+          ...originalRecord,
+          ...dataArray[0],
+          status: 'approved',
+          // Preserve critical fields
+          timestamp: originalRecord.timestamp,
+          imageUrl: originalRecord.imageUrl
+        };
 
-      // NOTE: For update/approve, our simple backend 'create' endpoint might not be enough if we want to DELETE the old pending one.
-      // But for this MVP, we will just add the new Approved ones.
-      // TODO: Add a real 'update' or 'delete' endpoint later.
+        try {
+          // Optimistic Update
+          setTransactions(prev => prev.map(t => t.id === existingId ? updatedRecord : t));
 
-      saveToBackend(approvedRecords).then(() => {
-        setTransactions(prev => {
-          const filtered = prev.filter(t => t.id !== existingId);
-          return [...approvedRecords, ...filtered];
+          // Backend Update
+          fetch(`${API_URL}/${existingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedRecord)
+          }).then(res => {
+            if (!res.ok) throw new Error("Update failed");
+            showSuccess("✅ 已批准 (Approved)");
+          }).catch(e => {
+            console.error(e);
+            alert("更新失败，请刷新重试");
+            // Revert? For now just alert.
+          });
+        } catch (e) {
+          console.error(e);
+        }
+
+      } else {
+        // Split: Create New + Delete Old
+        const approvedRecords: TransactionRecord[] = dataArray.map(d => ({
+          id: generateUUID(),
+          timestamp: Date.now(),
+          imageUrl: modalState.imageUrl,
+          status: 'approved',
+          ...d
+        }));
+
+        // 1. Save New
+        saveToBackend(approvedRecords).then(async () => {
+          // 2. Delete Old
+          try {
+            await fetch(`${API_URL}/${existingId}`, { method: 'DELETE' });
+
+            setTransactions(prev => {
+              const filtered = prev.filter(t => t.id !== existingId);
+              return [...approvedRecords, ...filtered];
+            });
+            showSuccess("✅ 已拆分并批准 (Split & Approved)");
+          } catch (e) {
+            console.error("Failed to delete original after split", e);
+          }
         });
-      });
+      }
     }
     setModalState(null);
   };
