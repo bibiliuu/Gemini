@@ -152,7 +152,7 @@ app.post('/api/analyze', async (req, res) => {
             2. **Taker (接单人)**: Extract names strictly BETWEEN "接单" and the next section ('3' or "场控").
                - **Boundary**: You MUST include the name immediately before the '3'/"场控" marker. Do not stop early.
                - **Exclusion**: Do NOT include the name *after* the '3'/"场控" marker.
-               - **Parentheses**: If a name is followed by text in parentheses (e.g. "Name (Note)"), treat it as a single entity. DO NOT extract the text inside parentheses as a *separate* taker name.
+               - **Parentheses**: If a name contains text in parentheses (e.g. "Name (Note)" or "Name（Note）"), REMOVE the parentheses and the text inside them. Return ONLY the name (e.g. "Name").
                - **Format**: Join multiple takers with commas.
             3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
             4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
