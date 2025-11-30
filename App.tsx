@@ -185,9 +185,12 @@ function AppContent() {
   // --- APP STATE ---
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
 
+  const [isPollingPaused, setIsPollingPaused] = useState(false);
+
   // Fetch transactions on load and poll every 5 seconds
   useEffect(() => {
     const fetchTransactions = async () => {
+      if (isPollingPaused) return; // Skip if paused
       try {
         const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
         const res = await fetch(API_URL);
@@ -204,7 +207,7 @@ function AppContent() {
     const intervalId = setInterval(fetchTransactions, 5000); // Poll every 5s
 
     return () => clearInterval(intervalId); // Cleanup
-  }, []);
+  }, [isPollingPaused]);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -496,6 +499,7 @@ function AppContent() {
       message: '确定要永久删除这条记录吗？此操作无法撤销。',
       isDestructive: true,
       onConfirm: async () => {
+        setIsPollingPaused(true); // Pause polling
         // Optimistic Update
         setTransactions(prev => prev.filter(t => t.id !== id));
         setConfirmState(prev => ({ ...prev, isOpen: false }));
@@ -507,6 +511,8 @@ function AppContent() {
         } catch (e) {
           console.error("Failed to delete", e);
           alert("删除失败，请刷新重试");
+        } finally {
+          setIsPollingPaused(false); // Resume polling
         }
       }
     });
@@ -564,12 +570,13 @@ function AppContent() {
       message: `确定要永久删除${filterName}中的所有 ${visibleTransactions.length} 条记录吗？此操作无法撤销。`,
       isDestructive: true,
       onConfirm: async () => {
+        setIsPollingPaused(true); // Pause polling
         // Optimistic Update
         const idsToDelete = visibleTransactions.map(t => t.id);
         setTransactions(prev => prev.filter(t => !idsToDelete.includes(t.id)));
         setConfirmState(prev => ({ ...prev, isOpen: false }));
 
-        // Backend Update (Batch)
+        // Backend Update (Batch with Fallback)
         const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
         try {
           const res = await fetch(`${API_URL}/batch-delete`, {
@@ -579,12 +586,17 @@ function AppContent() {
           });
 
           if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || 'Server returned error');
+            console.warn("Batch delete failed, falling back to sequential delete");
+            // Fallback: Delete one by one
+            await Promise.all(idsToDelete.map(id =>
+              fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+            ));
           }
         } catch (e) {
           console.error("Failed to delete batch", e);
-          alert("删除失败，可能是服务器未更新。请确保运行了 ./setup.sh");
+          alert("删除失败，请检查网络或重启服务器");
+        } finally {
+          setIsPollingPaused(false); // Resume polling
         }
       }
     });
