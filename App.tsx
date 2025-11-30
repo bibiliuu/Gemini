@@ -716,14 +716,14 @@ function AppContent() {
     });
   };
 
-  const checkRejected = (date: string, taker: string, amount: number) => {
+  const checkRejected = (date: string, taker: string, amount: number): string | null => {
     const cleanString = (str: string) => str?.toLowerCase().replace(/\s/g, '') || "";
     const cleanDate = (str: string) => str?.replace(/[.\/-]/g, '').replace(/\s/g, '') || "";
     const nDateClean = cleanDate(date?.trim() || "");
     const nTakerClean = cleanString(taker);
     const nAmount = amount;
 
-    return transactions.some(t => {
+    const match = transactions.find(t => {
       if (t.status !== 'rejected') return false;
       const tDateClean = cleanDate(t.orderDate?.trim() || "");
       const tTakerClean = cleanString(t.taker);
@@ -734,6 +734,8 @@ function AppContent() {
       const amountMatch = Math.abs(t.amount - nAmount) < 0.01;
       return dateMatch && takerMatch && amountMatch;
     });
+
+    return match ? (match.notes || "无理由 (No reason)") : null;
   };
 
   const formatDate = (ts: number | string) => {

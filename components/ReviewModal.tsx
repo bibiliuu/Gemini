@@ -15,7 +15,7 @@ interface Props {
   onReject: () => void;
   onCancel: () => void;
   checkDuplicate: (date: string, taker: string, amount: number) => boolean;
-  checkRejected?: (date: string, taker: string, amount: number) => boolean;
+  checkRejected?: (date: string, taker: string, amount: number) => string | null;
 }
 
 export const ReviewModal: React.FC<Props> = ({ initialData, initialConfig, imageUrl, mode, isAdmin, onSave, onReject, onCancel, checkDuplicate, checkRejected }) => {
@@ -99,7 +99,9 @@ export const ReviewModal: React.FC<Props> = ({ initialData, initialConfig, image
   const isDuplicate = !!duplicateName;
 
   // Rejected Check
-  const rejectedName = takerList.find(name => checkRejected && checkRejected(orderDate, name, perPersonAmount));
+  // We find the first name that matches a rejected record
+  const rejectedName = takerList.find(name => checkRejected && checkRejected(orderDate, name, perPersonAmount) !== null);
+  const rejectedReason = rejectedName && checkRejected ? checkRejected(orderDate, rejectedName, perPersonAmount) : null;
   const isRejected = !!rejectedName;
 
   const hasSuperior = isSuperiorValid(superior);
@@ -335,7 +337,7 @@ export const ReviewModal: React.FC<Props> = ({ initialData, initialConfig, image
                     {isRejected && !isDuplicate && (
                       <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
                         <Ban className="w-3 h-3" />
-                        ⚠️ 此订单曾被拒绝 (Previously Rejected): {rejectedName}
+                        ⚠️ 此订单曾被拒绝 (Previously Rejected): {rejectedReason}
                       </p>
                     )}
                   </div>
