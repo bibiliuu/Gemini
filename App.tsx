@@ -518,12 +518,14 @@ function AppContent() {
         setTransactions(prev => prev.filter(t => t.status !== 'rejected'));
         setConfirmState(prev => ({ ...prev, isOpen: false }));
 
-        // Backend Update (Loop for now, ideally batch)
+        // Backend Update (Batch)
         const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
         try {
-          await Promise.all(idsToDelete.map(id =>
-            fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-          ));
+          await fetch(`${API_URL}/batch-delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: idsToDelete })
+          });
         } catch (e) {
           console.error("Failed to delete batch", e);
           alert("部分删除失败，请刷新重试");

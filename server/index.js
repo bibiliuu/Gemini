@@ -140,6 +140,22 @@ app.put('/api/transactions/:id', async (req, res) => {
   }
 });
 
+// 6. Batch Delete Transactions
+app.post('/api/transactions/batch-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Invalid IDs' });
+    }
+
+    await pool.query('DELETE FROM transactions WHERE id = ANY($1)', [ids]);
+    res.json({ success: true, count: ids.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Batch delete failed' });
+  }
+});
+
 // Debug Endpoint: List Available Models
 app.get('/api/debug-models', async (req, res) => {
   try {
