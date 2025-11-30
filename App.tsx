@@ -552,13 +552,32 @@ function AppContent() {
 
     setConfirmState({
       isOpen: true,
-      title: `清空${filterName}记录`,
-      message: `危险操作：确定要清空当前筛选出的 ${visibleTransactions.length} 条记录吗？`,
+      title: `清空${filterName}`,
+      message: `确定要永久删除${filterName}中的所有 ${visibleTransactions.length} 条记录吗？此操作无法撤销。`,
       isDestructive: true,
-      onConfirm: () => {
-        const visibleIds = new Set(visibleTransactions.map(t => t.id));
-        setTransactions(prev => prev.filter(t => !visibleIds.has(t.id)));
+      onConfirm: async () => {
+        // Optimistic Update
+        const idsToDelete = visibleTransactions.map(t => t.id);
+        setTransactions(prev => prev.filter(t => !idsToDelete.includes(t.id)));
         setConfirmState(prev => ({ ...prev, isOpen: false }));
+
+        // Backend Update (Batch)
+        const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+        try {
+          const res = await fetch(`${API_URL}/batch-delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: idsToDelete })
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Server returned error');
+          }
+        } catch (e) {
+          console.error("Failed to delete batch", e);
+          alert("删除失败，可能是服务器未更新。请确保运行了 ./setup.sh");
+        }
       }
     });
   };
