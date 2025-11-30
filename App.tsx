@@ -560,6 +560,7 @@ function AppContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'rejected', notes: reason })
       });
+      showSuccess("✅ 已拒绝 (Rejected)");
     } catch (e) {
       console.error("Failed to update status", e);
       alert("更新失败，请刷新重试");
@@ -586,6 +587,7 @@ function AppContent() {
         try {
           const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
           await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+          showSuccess("✅ 已删除 (Deleted)");
         } catch (e) {
           console.error("Failed to delete", e);
           alert("删除失败，请刷新重试");
@@ -624,6 +626,7 @@ function AppContent() {
             const errData = await res.json();
             throw new Error(errData.error || 'Server returned error');
           }
+          showSuccess("✅ 已清空 (All Deleted)");
         } catch (e) {
           console.error("Failed to delete batch", e);
           alert("删除失败，可能是服务器未更新。请确保运行了 ./setup.sh");
@@ -670,6 +673,7 @@ function AppContent() {
               fetch(`${API_URL}/${id}`, { method: 'DELETE' })
             ));
           }
+          showSuccess("✅ 已清空 (All Deleted)");
         } catch (e) {
           console.error("Failed to delete batch", e);
           alert("删除失败，请检查网络或重启服务器");
