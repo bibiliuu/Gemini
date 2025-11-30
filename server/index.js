@@ -143,8 +143,19 @@ app.post('/api/analyze', async (req, res) => {
         parts: [
           {
             text: `Analyze this WeChat screenshot containing an order form (下单表).
-            Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-            Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+            
+            CRITICAL INSTRUCTIONS:
+            1. **Amount (金额)**: Look for numbers associated with "金额", "Total", "合计", or "¥".
+               - If the text contains an equals sign "=" (e.g., "50*2=100"), YOU MUST take the number AFTER the "=".
+               - If there is no "=", just take the number.
+               - Return ONLY the number (e.g., 100.00).
+            2. **Taker (接单人)**: Extract all names found before the number '3' or in the "接单" section. If multiple names, join with commas.
+            3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
+            4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
+            5. **Order Date (日期)**: Extract the date (YYYY-MM-DD).
+            6. **Content (内容)**: Summarize the order content briefly.
+
+            Return JSON with keys: amount (number), taker (string), controller (string), superior (string), orderDate (string), content (string), orderId (string).
             ONLY return the JSON object, no markdown.`
           },
           { inline_data: { mime_type: mimeType, data: base64Image } }
