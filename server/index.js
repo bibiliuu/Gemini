@@ -58,6 +58,57 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// 1.5 User Management (Admin)
+app.get('/api/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, username, name, role, password_hash as password FROM users ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/users', async (req, res) => {
+  const { id, username, password, name, role } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO users (id, username, password_hash, name, role) VALUES ($1, $2, $3, $4, $5)',
+      [id, username, password, name, role]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Create failed' });
+  }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { username, password, name, role } = req.body;
+  try {
+    await pool.query(
+      'UPDATE users SET username = $1, password_hash = $2, name = $3, role = $4 WHERE id = $5',
+      [username, password, name, role, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Update failed' });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
 // 2. Transactions (Get All)
 // 2. Transactions (Get All)
 app.get('/api/transactions', async (req, res) => {

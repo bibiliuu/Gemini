@@ -6,11 +6,13 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   users: User[];
-  onUpdateUsers: (updatedUsers: User[]) => void;
+  onAddUser: (user: User) => Promise<void>;
+  onEditUser: (user: User) => Promise<void>;
+  onDeleteUser: (id: string) => Promise<void>;
   currentUser: User;
 }
 
-export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, onUpdateUsers, currentUser }) => {
+export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, onAddUser, onEditUser, onDeleteUser, currentUser }) => {
   const [formData, setFormData] = useState({ username: '', password: '', name: '', role: 'user' as UserRole });
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -19,25 +21,25 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
   if (!isOpen) return null;
 
   const resetForm = () => {
-      setFormData({ username: '', password: '', name: '', role: 'user' });
-      setIsFormOpen(false);
-      setEditingId(null);
-      setError('');
+    setFormData({ username: '', password: '', name: '', role: 'user' });
+    setIsFormOpen(false);
+    setEditingId(null);
+    setError('');
   };
 
   const handleStartEdit = (user: User) => {
-      setFormData({
-          username: user.username,
-          password: user.password,
-          name: user.name,
-          role: user.role
-      });
-      setEditingId(user.id);
-      setIsFormOpen(true);
-      setError('');
+    setFormData({
+      username: user.username,
+      password: user.password,
+      name: user.name,
+      role: user.role
+    });
+    setEditingId(user.id);
+    setIsFormOpen(true);
+    setError('');
   };
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!formData.username || !formData.password || !formData.name) {
       setError('请填写所有字段');
       return;
@@ -50,29 +52,35 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
       return;
     }
 
-    if (editingId) {
+    try {
+      if (editingId) {
         // Update existing
-        const updatedList = users.map(u => u.id === editingId ? { ...u, ...formData } : u);
-        onUpdateUsers(updatedList);
-    } else {
+        await onEditUser({ id: editingId, ...formData });
+      } else {
         // Add new
         const userToAdd: User = {
           id: crypto.randomUUID(),
           ...formData
         };
-        onUpdateUsers([...users, userToAdd]);
+        await onAddUser(userToAdd);
+      }
+      resetForm();
+    } catch (e) {
+      setError('保存失败，请重试');
     }
-    
-    resetForm();
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (id === currentUser.id) {
       alert("无法删除当前登录的账号");
       return;
     }
     if (confirm('确定要删除该用户吗？')) {
-      onUpdateUsers(users.filter(u => u.id !== id));
+      try {
+        await onDeleteUser(id);
+      } catch (e) {
+        alert('删除失败');
+      }
     }
   };
 
@@ -90,35 +98,35 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
         </div>
 
         <div className="p-6 flex-1 overflow-y-auto bg-gray-50/50">
-          
+
           {/* Add/Edit User Form */}
           {isFormOpen ? (
             <div className="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm mb-6">
               <h3 className="text-sm font-bold text-gray-700 mb-4">
-                  {editingId ? '编辑用户信息' : '添加新用户'}
+                {editingId ? '编辑用户信息' : '添加新用户'}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input 
-                  placeholder="登录用户名" 
+                <input
+                  placeholder="登录用户名"
                   value={formData.username}
-                  onChange={e => setFormData({...formData, username: e.target.value})}
+                  onChange={e => setFormData({ ...formData, username: e.target.value })}
                   className="p-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
-                <input 
-                  placeholder="显示昵称" 
+                <input
+                  placeholder="显示昵称"
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="p-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
-                <input 
-                  placeholder="密码" 
+                <input
+                  placeholder="密码"
                   value={formData.password}
-                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
                   className="p-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
-                <select 
+                <select
                   value={formData.role}
-                  onChange={e => setFormData({...formData, role: e.target.value as UserRole})}
+                  onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
                   className="p-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
                   <option value="user">普通用户 (User)</option>
@@ -136,7 +144,7 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
               </div>
             </div>
           ) : (
-            <button 
+            <button
               onClick={() => setIsFormOpen(true)}
               className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all mb-6 flex items-center justify-center gap-2 bg-white"
             >
@@ -160,11 +168,11 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
                     <div className="text-xs text-gray-400">@{user.username} • {user.role === 'admin' ? '管理员' : '普通用户'}</div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-gray-300 font-mono mr-2">pwd: {user.password}</div>
-                  
-                  <button 
+
+                  <button
                     onClick={() => handleStartEdit(user)}
                     className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                     title="编辑"
@@ -173,7 +181,7 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
                   </button>
 
                   {user.id !== currentUser.id && (
-                    <button 
+                    <button
                       onClick={() => handleDeleteUser(user.id)}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="删除"

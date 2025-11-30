@@ -215,6 +215,11 @@ function AppContent() {
   const [rejectedSearchTerm, setRejectedSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'paid'>('all');
   const [filterDate, setFilterDate] = useState("");
+
+  // --- PERMISSIONS ---
+  const isAdmin = currentUser?.role === 'admin';
+  const isUser = currentUser?.role === 'user';
+
   // Review Modal State
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -261,9 +266,56 @@ function AppContent() {
   //   localStorage.setItem('wechat_transactions_v2', JSON.stringify(transactions));
   // }, [transactions]);
 
+  // --- USER MANAGEMENT ---
+  const fetchUsers = async () => {
+    try {
+      const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/users' : '/api/users';
+      const res = await fetch(API_URL);
+      if (res.ok) {
+        const users = await res.json();
+        setAppUsers(users);
+      }
+    } catch (e) {
+      console.error("Failed to fetch users", e);
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem('muse_app_users', JSON.stringify(appUsers));
-  }, [appUsers]);
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin]);
+
+  const handleAddUser = async (user: AppUser) => {
+    const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/users' : '/api/users';
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user)
+    });
+    if (!res.ok) throw new Error("Failed to create user");
+    await fetchUsers();
+  };
+
+  const handleEditUser = async (user: AppUser) => {
+    const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/users' : '/api/users';
+    const res = await fetch(`${API_URL}/${user.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user)
+    });
+    if (!res.ok) throw new Error("Failed to update user");
+    await fetchUsers();
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/users' : '/api/users';
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error("Failed to delete user");
+    await fetchUsers();
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -334,9 +386,7 @@ function AppContent() {
     });
   }, [approvedTransactions]);
 
-  // --- PERMISSIONS ---
-  const isAdmin = currentUser?.role === 'admin';
-  const isUser = currentUser?.role === 'user';
+
 
   // --- HANDLERS ---
 
@@ -818,7 +868,9 @@ function AppContent() {
           isOpen={isUserMgmtOpen}
           onClose={() => setIsUserMgmtOpen(false)}
           users={appUsers}
-          onUpdateUsers={setAppUsers}
+          onAddUser={handleAddUser}
+          onEditUser={handleEditUser}
+          onDeleteUser={handleDeleteUser}
           currentUser={currentUser}
         />
 
