@@ -149,10 +149,10 @@ app.post('/api/analyze', async (req, res) => {
                - If the text contains an equals sign "=" (e.g., "50*2=100"), YOU MUST take the number AFTER the "=".
                - If there is no "=", just take the number.
                - Return ONLY the number (e.g., 100.00).
-            2. **Taker (接单人)**: Extract ALL names in the "接单" section (usually starting with @). Include every single name found before the "场控" (Controller) section or the number '3'. Do not miss the last name even if it is close to the next section. If multiple names, join with commas.
+            2. **Taker (接单人)**: Extract ALL names in the "接单" section. The list continues UNTIL the start of the next section (usually '3' or '场控'). You MUST include the name immediately preceding the next section. For example, if you see '...NameA, NameB 3. 场控', you must extract NameA and NameB. Join with commas.
             3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
             4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
-            5. **Order Date (日期)**: Extract the exact string content. If the date and time are on separate lines (e.g. date on one line, time on the next), join them with a single space. Preserve all characters.
+            5. **Order Date (日期)**: Extract the exact string content. If the text contains a newline (e.g. date\ntime), REPLACE the newline with a SPACE. Example: '11.9\n16:29' -> '11.9 16:29'. Preserve all other characters.
             6. **Content (内容)**: Summarize the order content briefly.
 
             Return JSON with keys: amount (number), taker (string), controller (string), superior (string), orderDate (string), content (string), orderId (string).
