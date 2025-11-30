@@ -869,40 +869,42 @@ function AppContent() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right font-bold text-gray-900 text-base">
-                          ¥{t.amount.toFixed(2)}
+                          ¥{Number(t.amount || 0).toFixed(2)}
                         </td>
                         <td className="px-6 py-4 text-right font-medium text-green-700">
-                          {isPending ? <span className="text-gray-400 italic">计算中</span> : `¥${t.distribution.taker.toFixed(2)}`}
+                          {isPending ? <span className="text-gray-400 italic">计算中</span> : `¥${Number(t.distribution.taker || 0).toFixed(2)}`}
                         </td>
                         <td className="px-6 py-4 text-right font-medium text-blue-700">
-                          {isPending ? <span className="text-gray-400 italic">计算中</span> : `¥${t.distribution.controller.toFixed(2)}`}
+                          {isPending ? <span className="text-gray-400 italic">计算中</span> : `¥${Number(t.distribution.controller || 0).toFixed(2)}`}
                         </td>
                         <td className="px-6 py-4 text-right font-medium text-amber-700">
                           {isPending ? <span className="text-gray-400 italic">计算中</span> : (
-                            t.distribution.superior > 0 ? `¥${t.distribution.superior.toFixed(2)}` : '-'
+                            t.distribution.superior > 0 ? `¥${Number(t.distribution.superior || 0).toFixed(2)}` : '-'
                           )}
                         </td>
-                        {isAdmin && (
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              {isPending && (
+                        {
+                          isAdmin && (
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                {isPending && (
+                                  <button
+                                    onClick={() => openApproveModal(t)}
+                                    className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all"
+                                  >
+                                    批准
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => openApproveModal(t)}
-                                  className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-all"
+                                  onClick={() => handleDelete(t.id)}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                  title="删除记录"
                                 >
-                                  批准
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
-                              )}
-                              <button
-                                onClick={() => handleDelete(t.id)}
-                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                title="删除记录"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
+                              </div>
+                            </td>
+                          )
+                        }
                       </tr>
                     );
                   })}
@@ -993,7 +995,7 @@ function AppContent() {
         )}
 
       </div>
-    </div>
+    </div >
   );
 };
 
