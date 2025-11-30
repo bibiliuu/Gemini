@@ -111,7 +111,7 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// 4. AI Analysis (Direct Fetch to v1beta)
+// 4. AI Analysis (Direct Fetch v1beta with Header)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
@@ -120,10 +120,10 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   try {
-    console.log("Analyzing with Google Gemini (Direct Fetch v1)...");
+    console.log("Analyzing with Google Gemini (Direct Fetch v1beta Header)...");
 
-    const MODEL = "gemini-pro-vision";
-    const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const MODEL = "gemini-1.5-flash";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
     const requestBody = {
       contents: [{
@@ -141,7 +141,10 @@ app.post('/api/analyze', async (req, res) => {
 
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY
+      },
       body: JSON.stringify(requestBody)
     });
 
