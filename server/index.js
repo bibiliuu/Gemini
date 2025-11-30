@@ -122,7 +122,7 @@ app.post('/api/analyze', async (req, res) => {
   try {
     console.log("Analyzing with Google Gemini (Direct Fetch v1beta Header)...");
 
-    const MODEL = "gemini-1.5-flash";
+    const MODEL = "gemini-1.0-pro-vision-latest";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
     const requestBody = {
