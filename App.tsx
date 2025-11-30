@@ -448,14 +448,30 @@ function AppContent() {
     }
   };
 
-  const handleConfirmReject = (reason: string) => {
+  const handleConfirmReject = async (reason: string) => {
     if (!rejectDialog.targetId) return;
     if (!isAdmin) return;
+
+    // Optimistic Update
     setTransactions(prev => prev.map(t =>
       t.id === rejectDialog.targetId
         ? { ...t, status: 'rejected', notes: reason }
         : t
     ));
+
+    // Backend Update
+    try {
+      const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+      await fetch(`${API_URL}/${rejectDialog.targetId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected', notes: reason })
+      });
+    } catch (e) {
+      console.error("Failed to update status", e);
+      alert("更新失败，请刷新重试");
+    }
+
     setRejectDialog({ isOpen: false, targetId: null });
     setModalState(null);
   };
@@ -467,9 +483,19 @@ function AppContent() {
       title: '永久删除',
       message: '确定要永久删除这条记录吗？此操作无法撤销。',
       isDestructive: true,
-      onConfirm: () => {
+      onConfirm: async () => {
+        // Optimistic Update
         setTransactions(prev => prev.filter(t => t.id !== id));
         setConfirmState(prev => ({ ...prev, isOpen: false }));
+
+        // Backend Update
+        try {
+          const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+          await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        } catch (e) {
+          console.error("Failed to delete", e);
+          alert("删除失败，请刷新重试");
+        }
       }
     });
   };
@@ -482,9 +508,22 @@ function AppContent() {
       title: '清空已拒绝记录',
       message: `确定要永久删除所有 ${rejectedTransactions.length} 条已拒绝的记录吗？`,
       isDestructive: true,
-      onConfirm: () => {
+      onConfirm: async () => {
+        // Optimistic Update
+        const idsToDelete = rejectedTransactions.map(t => t.id);
         setTransactions(prev => prev.filter(t => t.status !== 'rejected'));
         setConfirmState(prev => ({ ...prev, isOpen: false }));
+
+        // Backend Update (Loop for now, ideally batch)
+        const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+        try {
+          await Promise.all(idsToDelete.map(id =>
+            fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+          ));
+        } catch (e) {
+          console.error("Failed to delete batch", e);
+          alert("部分删除失败，请刷新重试");
+        }
       }
     });
   };

@@ -111,6 +111,35 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
+// 4. Delete Transaction
+app.delete('/api/transactions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
+// 5. Update Transaction Status/Notes
+app.put('/api/transactions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+    // Only update status and notes for now
+    await pool.query(
+      'UPDATE transactions SET status = $1, notes = $2 WHERE id = $3',
+      [status, notes || '', id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Update failed' });
+  }
+});
+
 // Debug Endpoint: List Available Models
 app.get('/api/debug-models', async (req, res) => {
   try {
