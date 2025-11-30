@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { X, Plus, Trash2, Shield, User as UserIcon, Save, Pencil } from 'lucide-react';
+import { X, Plus, Trash2, Shield, User as UserIcon, Save, Pencil, Search } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -17,6 +17,12 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredUsers = users.filter(u =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (!isOpen) return null;
 
@@ -152,9 +158,23 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
             </button>
           )}
 
+          {/* Search Bar */}
+          {!isFormOpen && (
+            <div className="relative mb-4">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索用户..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              />
+            </div>
+          )}
+
           {/* User List */}
           <div className="space-y-3">
-            {users.map(user => (
+            {filteredUsers.map(user => (
               <div key={user.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.role === 'admin' ? 'bg-indigo-100 text-indigo-600' : 'bg-green-100 text-green-600'}`}>
