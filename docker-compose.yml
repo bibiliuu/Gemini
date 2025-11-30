@@ -11,8 +11,6 @@ services:
       - PORT=3000
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/gemini_db
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
     depends_on:
       - db
     networks:

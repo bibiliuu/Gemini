@@ -111,61 +111,35 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// 4. AI Analysis (Via Aliyun Qwen-VL)
+// 4. AI Analysis (Standard Google Gemini)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
-  // Use DASHSCOPE_API_KEY
-  // const apiKey = process.env.DASHSCOPE_API_KEY;
-  const apiKey = "sk-7122818ee971436986320acca9e88b05"; // New Chinese Key
-
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server missing DASHSCOPE_API_KEY" });
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: "Server missing GEMINI_API_KEY" });
   }
 
   try {
-    console.log("Analyzing with Qwen-VL-Max (Chinese API)...");
+    console.log("Analyzing with Google Gemini (Standard)...");
 
-    // Chinese OpenAI-Compatible Endpoint
-    const response = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "model": "qwen-vl-plus", // Switched to Plus version (more widely available)
-        "messages": [
-          {
-            "role": "user",
-            "content": [
-              {
-                "type": "text",
-                "text": `Analyze this WeChat screenshot containing an order form (下单表).
-                Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-                Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
-                ONLY return the JSON object, no markdown.`
-              },
-              {
-                "type": "image_url",
-                "image_url": {
-                  "url": `data:${mimeType};base64,${base64Image}`
-                }
-              }
-            ]
-          }
-        ]
-      })
-    });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Aliyun API Error:", errorText);
-      throw new Error(`API Error: ${response.status} ${errorText}`);
-    }
+    const prompt = `Analyze this WeChat screenshot containing an order form (下单表).
+    Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
+    Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+    ONLY return the JSON object, no markdown.`;
 
-    const result = await response.json();
-    const text = result.choices[0].message.content;
+    const imagePart = {
+      inlineData: {
+        data: base64Image,
+        mimeType: mimeType
+      }
+    };
+
+    const result = await model.generateContent([prompt, imagePart]);
+    const response = await result.response;
+    const text = response.text();
 
     // Clean markdown if present
     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
@@ -173,7 +147,7 @@ app.post('/api/analyze', async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error("AI Analysis Failed:", error);
+    console.error("Gemini Analysis Failed:", error);
     res.status(500).json({ error: "AI Analysis Failed: " + error.message });
   }
 });
