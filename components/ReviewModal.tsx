@@ -199,17 +199,28 @@ export const ReviewModal: React.FC<Props> = ({ initialData, initialConfig, image
               </button>
             </div>
 
+            {/* Duplicate / Rejected Warnings */}
             {isDuplicate && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-pulse shadow-sm">
-                <Ban className="w-8 h-8 text-red-600 shrink-0 mt-1" />
+              <div className="mb-6 p-4 bg-red-100 border border-red-200 text-red-700 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-2">
+                <Ban className="w-5 h-5 shrink-0" />
                 <div>
-                  <h4 className="font-bold text-red-700 text-lg">检测到重复订单</h4>
-                  <p className="text-sm text-red-600 mt-1 leading-relaxed font-medium">
-                    名字: <b>{duplicateName}</b> 已存在相同金额和日期的记录。
-                  </p>
+                  <p className="font-bold">重复订单 (Duplicate)</p>
+                  <p className="text-sm">此订单已存在，无法重复提交。({duplicateName})</p>
                 </div>
               </div>
             )}
+
+            {isRejected && !isDuplicate && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2 animate-in slide-in-from-top-2">
+                <Ban className="w-5 h-5 shrink-0" />
+                <div>
+                  <p className="font-bold">⚠️ 此订单曾被拒绝 (Previously Rejected)</p>
+                  <p className="text-sm">拒绝原因: {rejectedReason}</p>
+                </div>
+              </div>
+            )}
+
+
 
             <div className="space-y-6 flex-1 overflow-y-auto pr-2">
 
@@ -328,18 +339,7 @@ export const ReviewModal: React.FC<Props> = ({ initialData, initialConfig, image
                         ))}
                       </div>
                     )}
-                    {isDuplicate && (
-                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                        <Ban className="w-3 h-3" />
-                        重复订单: {duplicateName}
-                      </p>
-                    )}
-                    {isRejected && !isDuplicate && (
-                      <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
-                        <Ban className="w-3 h-3" />
-                        ⚠️ 此订单曾被拒绝 (Previously Rejected): {rejectedReason}
-                      </p>
-                    )}
+
                   </div>
                   <div className="text-right mt-1">
                     <span className="font-bold text-green-700 block">¥{distribution.taker.toFixed(2)}</span>
