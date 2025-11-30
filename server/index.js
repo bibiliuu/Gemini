@@ -59,10 +59,26 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // 2. Transactions (Get All)
+// 2. Transactions (Get All)
 app.get('/api/transactions', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions ORDER BY timestamp DESC');
-    res.json(result.rows);
+    // Map snake_case to camelCase
+    const mapped = result.rows.map(row => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      imageUrl: row.image_url,
+      status: row.status,
+      amount: parseFloat(row.amount), // Ensure number
+      taker: row.taker,
+      controller: row.controller,
+      superior: row.superior,
+      orderDate: row.order_date,
+      content: row.content,
+      distribution: typeof row.distribution === 'string' ? JSON.parse(row.distribution) : row.distribution,
+      notes: row.notes
+    }));
+    res.json(mapped);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
