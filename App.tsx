@@ -96,6 +96,46 @@ const RejectReasonDialog: React.FC<RejectReasonDialogProps> = ({ isOpen, onConfi
   );
 };
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-red-600">
+          <h1 className="text-2xl font-bold">Something went wrong.</h1>
+          <pre className="mt-4 bg-gray-100 p-4 rounded overflow-auto">
+            {this.state.error?.toString()}
+          </pre>
+          <button
+            onClick={() => {
+              sessionStorage.clear();
+              localStorage.clear();
+              window.location.reload();
+            }}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded"
+          >
+            Reset App & Clear Data
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const DEFAULT_USERS: AppUser[] = [{
   id: 'default-admin',
   username: 'admin',
@@ -104,7 +144,15 @@ const DEFAULT_USERS: AppUser[] = [{
   role: 'admin'
 }];
 
-const App: React.FC = () => {
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+};
+
+function AppContent() {
   // --- AUTH STATE ---
   const [appUsers, setAppUsers] = useState<AppUser[]>(() => {
     const saved = localStorage.getItem('muse_app_users');
