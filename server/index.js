@@ -111,6 +111,18 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
+// Debug Endpoint: List Available Models
+app.get('/api/debug-models', async (req, res) => {
+  try {
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`;
+    const response = await fetch(API_URL);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 4. AI Analysis (Direct Fetch v1beta with Header)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
@@ -122,7 +134,8 @@ app.post('/api/analyze', async (req, res) => {
   try {
     console.log("Analyzing with Google Gemini (Direct Fetch v1beta Header)...");
 
-    const MODEL = "gemini-1.0-pro-vision-latest";
+    // Fallback to gemini-1.5-flash as default, but we will check debug endpoint first
+    const MODEL = "gemini-1.5-flash";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
     const requestBody = {
