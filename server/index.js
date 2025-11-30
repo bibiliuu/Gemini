@@ -223,13 +223,12 @@ app.post('/api/analyze', async (req, res) => {
                - If the text contains an equals sign "=" (e.g., "50*2=100"), YOU MUST take the number AFTER the "=".
                - If there is no "=", just take the number.
                - Return ONLY the number (e.g., 100.00).
-            2. **Taker (接单人)**: Extract names strictly BETWEEN "接单" and the next section ('3' or "场控").
-               - **Boundary**: You MUST include the name immediately before the '3'/"场控" marker. Do not stop early.
-               - **Exclusion**: Do NOT include the name *after* the '3'/"场控" marker.
-               - **Parentheses**: If a name contains text in parentheses (e.g. "Name (Note)" or "Name（Note）"), REMOVE the parentheses and the text inside them. Return ONLY the name (e.g. "Name").
-               - **Format**: Join multiple takers with commas.
-            3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
-            4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
+            2. **Taker (接单人)**: Extract the name associated with "接单" or "接单人".
+               - **CRITICAL**: Do NOT confuse with "下单" (Orderer). Ignore "下单".
+               - If the name contains emojis or special characters (e.g. "@M🎧"), INCLUDE them.
+               - If the name contains text in parentheses, REMOVE the parentheses and text inside.
+            3. **Controller (场控)**: Extract the name associated with "场控" or "Controller".
+            4. **Superior (直属)**: Extract the name associated with "直属" or "Superior". If it says "无" or "None", return empty string or "无".
             5. **Order Date (日期)**: Extract the exact string content. If the text contains a newline (e.g. date\ntime), REPLACE the newline with a SPACE. Example: '11.9\n16:29' -> '11.9 16:29'. Preserve all other characters.
             6. **Content (内容)**: Extract ONLY the text following "点单内容" or "内容". STRICTLY EXCLUDE "下单" (Orderer) or any names.
 
