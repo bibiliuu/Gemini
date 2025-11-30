@@ -716,6 +716,26 @@ function AppContent() {
     });
   };
 
+  const checkRejected = (date: string, taker: string, amount: number) => {
+    const cleanString = (str: string) => str?.toLowerCase().replace(/\s/g, '') || "";
+    const cleanDate = (str: string) => str?.replace(/[.\/-]/g, '').replace(/\s/g, '') || "";
+    const nDateClean = cleanDate(date?.trim() || "");
+    const nTakerClean = cleanString(taker);
+    const nAmount = amount;
+
+    return transactions.some(t => {
+      if (t.status !== 'rejected') return false;
+      const tDateClean = cleanDate(t.orderDate?.trim() || "");
+      const tTakerClean = cleanString(t.taker);
+      const isDateEmpty1 = tDateClean === "" || tDateClean === "无日期";
+      const isDateEmpty2 = nDateClean === "" || nDateClean === "无日期";
+      const dateMatch = (tDateClean === nDateClean) || (isDateEmpty1 && isDateEmpty2);
+      const takerMatch = tTakerClean === nTakerClean;
+      const amountMatch = Math.abs(t.amount - nAmount) < 0.01;
+      return dateMatch && takerMatch && amountMatch;
+    });
+  };
+
   const formatDate = (ts: number | string) => {
     return new Date(Number(ts)).toLocaleString('zh-CN', {
       timeZone: 'Asia/Shanghai',
@@ -865,6 +885,7 @@ function AppContent() {
             mode={modalState.mode}
             isAdmin={isAdmin}
             checkDuplicate={checkDuplicate}
+            checkRejected={checkRejected}
             onSave={handleSaveModal}
             onReject={handleRejectModal}
             onCancel={() => setModalState(null)}
