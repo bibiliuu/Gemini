@@ -185,7 +185,7 @@ function AppContent() {
   // --- APP STATE ---
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
 
-  // Fetch transactions on load
+  // Fetch transactions on load and poll every 5 seconds
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -199,7 +199,11 @@ function AppContent() {
         console.error("Failed to fetch transactions", e);
       }
     };
-    fetchTransactions();
+
+    fetchTransactions(); // Initial fetch
+    const intervalId = setInterval(fetchTransactions, 5000); // Poll every 5s
+
+    return () => clearInterval(intervalId); // Cleanup
   }, []);
 
   const [isProcessing, setIsProcessing] = useState(false);
