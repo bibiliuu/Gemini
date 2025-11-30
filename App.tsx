@@ -520,6 +520,7 @@ function AppContent() {
 
         // Backend Update (Batch)
         const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+        console.log("Attempting to batch delete IDs:", idsToDelete);
         try {
           const res = await fetch(`${API_URL}/batch-delete`, {
             method: 'POST',
