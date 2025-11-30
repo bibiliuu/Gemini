@@ -111,7 +111,7 @@ app.post('/api/transactions', async (req, res) => {
   }
 });
 
-// 4. AI Analysis (Standard Google Gemini)
+// 4. AI Analysis (Direct Fetch to v1beta)
 app.post('/api/analyze', async (req, res) => {
   const { base64Image, mimeType } = req.body;
 
@@ -120,26 +120,39 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   try {
-    console.log("Analyzing with Google Gemini (Standard)...");
+    console.log("Analyzing with Google Gemini (Direct Fetch v1beta)...");
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+    const MODEL = "gemini-1.5-flash";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-    const prompt = `Analyze this WeChat screenshot containing an order form (下单表).
-    Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
-    Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
-    ONLY return the JSON object, no markdown.`;
-
-    const imagePart = {
-      inlineData: {
-        data: base64Image,
-        mimeType: mimeType
-      }
+    const requestBody = {
+      contents: [{
+        parts: [
+          {
+            text: `Analyze this WeChat screenshot containing an order form (下单表).
+            Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
+            Return JSON with keys: amount, taker, controller, superior, orderDate, content, orderId.
+            ONLY return the JSON object, no markdown.`
+          },
+          { inline_data: { mime_type: mimeType, data: base64Image } }
+        ]
+      }]
     };
 
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    const text = response.text();
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API Error:", errorText);
+      throw new Error(`API Error: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
 
     // Clean markdown if present
     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '');
