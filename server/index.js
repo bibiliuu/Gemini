@@ -123,7 +123,7 @@ app.post('/api/analyze', async (req, res) => {
     console.log("Analyzing with Google Gemini (Standard)...");
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
 
     const prompt = `Analyze this WeChat screenshot containing an order form (下单表).
     Extract: Amount, Taker (all names before '3'), Controller, Superior, Order Date, Content.
