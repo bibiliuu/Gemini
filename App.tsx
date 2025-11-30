@@ -243,6 +243,14 @@ function AppContent() {
   // User Management Modal
   const [isUserMgmtOpen, setIsUserMgmtOpen] = useState(false);
 
+  // Success Notification State
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
   // --- EFFECTS ---
   // REMOVED: LocalStorage Sync
   // useEffect(() => {
@@ -634,6 +642,16 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
+
+        {/* Success Notification Banner */}
+        {successMessage && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 fade-in duration-300">
+            <div className="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 font-medium">
+              <CheckCheck className="w-5 h-5" />
+              {successMessage}
+            </div>
+          </div>
+        )}
 
         <ConfirmDialog
           isOpen={confirmState.isOpen}
