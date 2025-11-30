@@ -134,8 +134,8 @@ app.post('/api/analyze', async (req, res) => {
   try {
     console.log("Analyzing with Google Gemini (Direct Fetch v1beta Header)...");
 
-    // Fallback to gemini-1.5-flash as default, but we will check debug endpoint first
-    const MODEL = "gemini-1.5-flash";
+    // Using gemini-2.0-flash as confirmed by debug endpoint
+    const MODEL = "gemini-2.0-flash";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
     const requestBody = {
