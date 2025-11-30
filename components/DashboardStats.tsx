@@ -27,7 +27,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
   // Helper to extract YYYY-MM from various date string formats
   const getMonthKey = (dateStr: string): string => {
     if (!dateStr || dateStr === '无日期' || dateStr === '') return 'Unknown';
-    
+
     // clean string
     const clean = dateStr.replace(/\s/g, '');
 
@@ -52,7 +52,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
     const months = new Set<string>();
     // Always add current month to options so it's selectable even if empty
     months.add(currentMonthKey);
-    
+
     transactions.forEach(t => {
       const m = getMonthKey(t.orderDate);
       if (m !== 'Unknown') months.add(m);
@@ -97,12 +97,12 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
       if (!name || name === '无' || name === '未知' || amount <= 0) return;
       // Strict cleaning: remove all whitespace to ensure "Alice" and "Alice " merge
       const sanitizedName = name.replace(/\s+/g, '');
-      
+
       const current = map.get(sanitizedName) || { total: 0, taker: 0, controller: 0, superior: 0 };
-      
+
       current.total += amount;
       current[type] += amount;
-      
+
       map.set(sanitizedName, current);
     };
 
@@ -131,13 +131,48 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
       if (i === 2) rankIcon = '🥉';
       return `${rankIcon} ${p.name}  ${formatCurrency(p.total)}`;
     });
-    
+
     const text = [title, '----------------', ...lines].join('\n');
-    
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(err => {
+        console.error('Clipboard API failed:', err);
+        fallbackCopyTextToClipboard(text);
+      });
+    } else {
+      fallbackCopyTextToClipboard(text);
+    }
+  };
+
+  const fallbackCopyTextToClipboard = (text: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        alert('复制失败，请手动复制');
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      alert('复制失败，请手动复制');
+    }
+    document.body.removeChild(textArea);
   };
 
   // Helper: Export to Excel (Formatted HTML as XLS)
@@ -145,7 +180,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
     // Headers in Chinese
     const headers = ['排名', '姓名', '总收入', '接单收入', '场控收入', '直属收入'];
     const titleText = selectedMonth === 'ALL' ? '总排行榜' : `${selectedMonth}月排行榜`;
-    
+
     // CSS for Light Turquoise Light Style 2
     const styles = `
       <style>
@@ -215,11 +250,11 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
     // Create Blob with Excel MIME type and BOM for UTF-8 to fix Chinese characters
     const blob = new Blob(['\uFEFF', tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     // Use titleText for filename to match header
     const filename = `${titleText}.xls`;
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
     document.body.appendChild(link);
@@ -229,7 +264,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
 
   return (
     <div className="space-y-6 mb-8">
-      
+
       {/* Filter Bar - Available to ALL */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2 text-gray-700 font-medium">
@@ -239,7 +274,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">选择月份:</span>
           <div className="relative">
-            <select 
+            <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2 pl-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium cursor-pointer"
@@ -264,7 +299,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
               <p className="text-3xl font-bold text-gray-900 mt-2">{formatCurrency(currentStats.totalRevenue)}</p>
               <p className="text-sm text-gray-400 mt-1">共 {currentStats.orderCount} 单</p>
             </div>
-            
+
             <div className="bg-white p-6 rounded-xl shadow-sm border border-green-100">
               <h3 className="text-sm font-medium text-green-600">接单人总计 (80%)</h3>
               <p className="text-2xl font-bold text-green-700 mt-2">{formatCurrency(currentStats.totalTaker)}</p>
@@ -317,32 +352,32 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
       {/* Individual Leaderboard - Available to ALL, but actions restricted */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Responsive Header for Mobile */}
-        <div 
+        <div
           className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:bg-gray-50 transition-colors"
         >
           {/* Title Section */}
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-             <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
-             <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-bold text-gray-800">
-                  人员收入排行 (Top 20)
-                </h3>
-                {selectedMonth !== 'ALL' && (
-                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
-                    {selectedMonth}
-                  </span>
-                )}
-             </div>
+            <Trophy className="w-5 h-5 text-yellow-500 shrink-0" />
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-bold text-gray-800">
+                人员收入排行 (Top 20)
+              </h3>
+              {selectedMonth !== 'ALL' && (
+                <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
+                  {selectedMonth}
+                </span>
+              )}
+            </div>
           </div>
-          
+
           {/* Actions Section */}
           <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-             {/* ADMIN ONLY ACTIONS */}
-             {isAdmin && (
-               <>
+            {/* ADMIN ONLY ACTIONS */}
+            {isAdmin && (
+              <>
                 <button
                   onClick={handleExportExcel}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors whitespace-nowrap"
@@ -360,15 +395,15 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
                   {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                   {copied ? '已复制' : '复制榜单'}
                 </button>
-               </>
-             )}
+              </>
+            )}
 
             <button onClick={() => setIsExpanded(!isExpanded)} className="text-gray-400 p-1 hover:text-gray-600 ml-auto sm:ml-0">
               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
           </div>
         </div>
-        
+
         {isExpanded && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -384,11 +419,11 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {personStats.length === 0 ? (
-                   <tr>
-                     <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
-                       当前月份无数据
-                     </td>
-                   </tr>
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                      当前月份无数据
+                    </td>
+                  </tr>
                 ) : (
                   personStats.map((person, index) => (
                     <tr key={person.name} className="hover:bg-gray-50/50 transition-colors">
@@ -396,12 +431,11 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
                         {index + 1}
                       </td>
                       <td className="px-6 py-4 font-bold text-gray-800 flex items-center gap-2">
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                           index < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-indigo-100 text-indigo-600'
-                         }`}>
-                            {index < 3 ? <Trophy className="w-4 h-4" /> : person.name.charAt(0)}
-                         </div>
-                         {person.name}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${index < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-indigo-100 text-indigo-600'
+                          }`}>
+                          {index < 3 ? <Trophy className="w-4 h-4" /> : person.name.charAt(0)}
+                        </div>
+                        {person.name}
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-gray-900 text-lg">
                         {formatCurrency(person.total)}

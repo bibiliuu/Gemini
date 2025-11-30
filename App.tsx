@@ -57,6 +57,10 @@ interface RejectReasonDialogProps {
 const RejectReasonDialog: React.FC<RejectReasonDialogProps> = ({ isOpen, onConfirm, onCancel }) => {
   const [reason, setReason] = useState('');
 
+  useEffect(() => {
+    if (isOpen) setReason('');
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
