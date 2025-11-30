@@ -225,7 +225,9 @@ app.post('/api/analyze', async (req, res) => {
                - Return ONLY the number (e.g., 100.00).
             2. **Taker (接单人)**: Extract the name associated with "接单" or "接单人".
                - **CRITICAL**: Do NOT confuse with "下单" (Orderer). Ignore "下单".
-               - **Clean Up**: REMOVE all emojis (e.g. 🎧, 👑, 🦋) and special symbols. Keep only the text (Chinese/English).
+               - **Pattern**: If the name looks like "@M... · Name", extract ONLY the "Name" part.
+               - **Example**: "@M🎧 · 早点" -> "早点".
+               - **Clean Up**: Remove emojis, "@", "·", and single letters like "M". Keep Chinese characters.
                - If the name contains text in parentheses, REMOVE the parentheses and text inside.
             3. **Controller (场控)**: Extract the name associated with "场控" or "Controller".
             4. **Superior (直属)**: Extract the name associated with "直属" or "Superior". If it says "无" or "None", return empty string or "无".
