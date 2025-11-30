@@ -369,6 +369,7 @@ function AppContent() {
       } catch (e) {
         console.error(e);
         alert("保存失败，请检查网络");
+        throw e; // Re-throw to stop .then() chain
       }
     };
 
