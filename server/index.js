@@ -120,10 +120,10 @@ app.post('/api/analyze', async (req, res) => {
   }
 
   try {
-    console.log("Analyzing with Google Gemini (Direct Fetch v1beta)...");
+    console.log("Analyzing with Google Gemini (Direct Fetch v1)...");
 
-    const MODEL = "gemini-1.5-flash";
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const MODEL = "gemini-pro-vision";
+    const API_URL = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const requestBody = {
       contents: [{
