@@ -149,7 +149,11 @@ app.post('/api/analyze', async (req, res) => {
                - If the text contains an equals sign "=" (e.g., "50*2=100"), YOU MUST take the number AFTER the "=".
                - If there is no "=", just take the number.
                - Return ONLY the number (e.g., 100.00).
-            2. **Taker (接单人)**: Extract names strictly located BETWEEN the "接单" label and the start of the next section (usually '3' or "场控"). STOP extracting immediately when you see '3' or "场控". Do NOT include the name that follows "场控". For example, if the text is "2. 接单 @UserA 3. 场控 @UserB", the ONLY taker is UserA. Join multiple takers with commas.
+            2. **Taker (接单人)**: Extract names strictly BETWEEN "接单" and the next section ('3' or "场控").
+               - **Boundary**: You MUST include the name immediately before the '3'/"场控" marker. Do not stop early.
+               - **Exclusion**: Do NOT include the name *after* the '3'/"场控" marker.
+               - **Parentheses**: If a name is followed by text in parentheses (e.g. "Name (Note)"), treat it as a single entity. DO NOT extract the text inside parentheses as a *separate* taker name.
+               - **Format**: Join multiple takers with commas.
             3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
             4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
             5. **Order Date (日期)**: Extract the exact string content. If the text contains a newline (e.g. date\ntime), REPLACE the newline with a SPACE. Example: '11.9\n16:29' -> '11.9 16:29'. Preserve all other characters.
