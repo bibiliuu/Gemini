@@ -61,7 +61,7 @@ app.post('/api/auth/login', async (req, res) => {
 // 1.5 User Management (Admin)
 app.get('/api/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, username, name, role, password_hash as password FROM users ORDER BY created_at DESC');
+    const result = await pool.query('SELECT id, username, name, role, password_hash as password FROM users');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
