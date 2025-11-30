@@ -231,7 +231,7 @@ app.post('/api/analyze', async (req, res) => {
             3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
             4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
             5. **Order Date (日期)**: Extract the exact string content. If the text contains a newline (e.g. date\ntime), REPLACE the newline with a SPACE. Example: '11.9\n16:29' -> '11.9 16:29'. Preserve all other characters.
-            6. **Content (内容)**: Summarize the order content briefly.
+            6. **Content (内容)**: Summarize the order content briefly. Do NOT include "下单人" (Orderer) or any names in this field.
 
             Return JSON with keys: amount (number), taker (string), controller (string), superior (string), orderDate (string), content (string), orderId (string).
             ONLY return the JSON object, no markdown.`
