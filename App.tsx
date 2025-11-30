@@ -521,14 +521,21 @@ function AppContent() {
         // Backend Update (Batch)
         const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
         try {
-          await fetch(`${API_URL}/batch-delete`, {
+          const res = await fetch(`${API_URL}/batch-delete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ids: idsToDelete })
           });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Server returned error');
+          }
         } catch (e) {
           console.error("Failed to delete batch", e);
-          alert("部分删除失败，请刷新重试");
+          alert("删除失败，可能是服务器未更新。请确保运行了 ./setup.sh");
+          // Revert optimistic update?
+          // Ideally yes, but for now let's just alert.
         }
       }
     });
