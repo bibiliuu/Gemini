@@ -96,24 +96,38 @@ const RejectReasonDialog: React.FC<RejectReasonDialogProps> = ({ isOpen, onConfi
   );
 };
 
+const DEFAULT_USERS: AppUser[] = [{
+  id: 'default-admin',
+  username: 'admin',
+  password: '123456',
+  name: '超级管理员',
+  role: 'admin'
+}];
+
 const App: React.FC = () => {
   // --- AUTH STATE ---
   const [appUsers, setAppUsers] = useState<AppUser[]>(() => {
     const saved = localStorage.getItem('muse_app_users');
     if (saved) return JSON.parse(saved);
     // Default Admin
-    return [{
-      id: 'default-admin',
-      username: 'admin',
-      password: '123456',
-      name: '超级管理员',
-      role: 'admin'
-    }];
+    try {
+      const saved = localStorage.getItem('muse_app_users');
+      return saved ? JSON.parse(saved) : DEFAULT_USERS;
+    } catch (e) {
+      console.error("Failed to parse app users", e);
+      return DEFAULT_USERS;
+    }
   });
 
   const [currentUser, setCurrentUser] = useState<AppUser | null>(() => {
-    const sess = sessionStorage.getItem('muse_current_user');
-    return sess ? JSON.parse(sess) : null;
+    try {
+      const sess = sessionStorage.getItem('muse_current_user');
+      return sess ? JSON.parse(sess) : null;
+    } catch (e) {
+      console.error("Failed to parse current user", e);
+      sessionStorage.removeItem('muse_current_user');
+      return null;
+    }
   });
 
   // --- APP STATE ---
