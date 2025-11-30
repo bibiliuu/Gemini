@@ -555,10 +555,18 @@ function AppContent() {
     // Backend Update
     try {
       const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+
+      const targetTransaction = transactions.find(t => t.id === rejectDialog.targetId);
+      if (!targetTransaction) throw new Error("Transaction not found");
+
       await fetch(`${API_URL}/${rejectDialog.targetId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected', notes: reason })
+        body: JSON.stringify({
+          ...targetTransaction,
+          status: 'rejected',
+          notes: reason
+        })
       });
       showSuccess("✅ 已拒绝 (Rejected)");
     } catch (e) {
