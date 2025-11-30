@@ -149,7 +149,7 @@ app.post('/api/analyze', async (req, res) => {
                - If the text contains an equals sign "=" (e.g., "50*2=100"), YOU MUST take the number AFTER the "=".
                - If there is no "=", just take the number.
                - Return ONLY the number (e.g., 100.00).
-            2. **Taker (接单人)**: Extract all names found before the number '3' or in the "接单" section. If multiple names, join with commas.
+            2. **Taker (接单人)**: Extract ALL names in the "接单" section (usually starting with @). Include every single name found before the "场控" (Controller) section or the number '3'. Do not miss the last name even if it is close to the next section. If multiple names, join with commas.
             3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
             4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
             5. **Order Date (日期)**: Extract the exact string content. If the date and time are on separate lines (e.g. date on one line, time on the next), join them with a single space. Preserve all characters.
