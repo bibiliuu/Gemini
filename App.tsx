@@ -413,6 +413,7 @@ function AppContent() {
 
       saveToBackend(newRecords).then(() => {
         setTransactions(prev => [...newRecords, ...prev]);
+        showSuccess("✅ 已成功保存到云端数据库 (Saved to Cloud)");
       });
 
     } else {
@@ -634,8 +635,8 @@ function AppContent() {
     });
   };
 
-  const formatDate = (ts: number) => {
-    return new Date(ts).toLocaleString('zh-CN', {
+  const formatDate = (ts: number | string) => {
+    return new Date(Number(ts)).toLocaleString('zh-CN', {
       timeZone: 'Asia/Shanghai',
       month: 'numeric',
       day: 'numeric',
