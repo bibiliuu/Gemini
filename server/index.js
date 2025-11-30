@@ -152,7 +152,7 @@ app.post('/api/analyze', async (req, res) => {
             2. **Taker (接单人)**: Extract all names found before the number '3' or in the "接单" section. If multiple names, join with commas.
             3. **Controller (控号)**: Extract the name associated with "控号" or "Controller".
             4. **Superior (上级)**: Extract the name associated with "上级" or "Superior".
-            5. **Order Date (日期)**: Extract the exact string content from the date field/column. Preserve all characters, punctuation, and format exactly as they appear in the image. DO NOT reformat.
+            5. **Order Date (日期)**: Extract the exact string content. If the date and time are on separate lines (e.g. date on one line, time on the next), join them with a single space. Preserve all characters.
             6. **Content (内容)**: Summarize the order content briefly.
 
             Return JSON with keys: amount (number), taker (string), controller (string), superior (string), orderDate (string), content (string), orderId (string).
