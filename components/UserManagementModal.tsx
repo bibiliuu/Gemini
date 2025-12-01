@@ -68,13 +68,14 @@ export const UserManagementModal: React.FC<Props> = ({ isOpen, onClose, users, o
       } else {
         // Add new
         const userToAdd: User = {
-          id: crypto.randomUUID(),
+          id: Date.now().toString(36) + Math.random().toString(36).substr(2),
           ...formData
         };
         await onAddUser(userToAdd);
       }
       resetForm();
     } catch (e) {
+      console.error("Save user failed:", e);
       setError('保存失败，请重试');
     }
   };
