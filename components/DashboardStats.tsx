@@ -56,6 +56,23 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
       return `${year}-${shortMatch[1].padStart(2, '0')}`;
     }
 
+    // Try Chinese format: YYYY年MM月 or MM月DD日
+    const chineseFullMatch = clean.match(/(\d{4})年(\d{1,2})月/);
+    if (chineseFullMatch) {
+      return `${chineseFullMatch[1]}-${chineseFullMatch[2].padStart(2, '0')}`;
+    }
+
+    const chineseShortMatch = clean.match(/(\d{1,2})月(\d{1,2})日?/);
+    if (chineseShortMatch) {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+      });
+      const year = formatter.format(new Date());
+      return `${year}-${chineseShortMatch[1].padStart(2, '0')}`;
+    }
+
+    console.log("Unknown date format:", dateStr);
     return 'Unknown';
   };
 
