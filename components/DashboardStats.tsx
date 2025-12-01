@@ -477,28 +477,6 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
           </div>
         )}
       </div>
-      {/* Debug Info (Temporary) */}
-      <div className="text-xs text-gray-400 mt-8 p-4 border border-gray-100 rounded">
-        <p>Debug Info:</p>
-        <p>Current Month Key (Beijing): {currentMonthKey}</p>
-        <p>Selected Month: {selectedMonth}</p>
-        <p>Total Transactions: {transactions.length}</p>
-        <p>Filtered Transactions: {filteredTransactions.length}</p>
-        <p>Available Months: {availableMonths.join(', ')}</p>
-        {transactions.length > 0 && (
-          <div className="mt-2 border-t pt-2 max-h-40 overflow-y-auto">
-            <p className="font-bold">Transaction Debug List:</p>
-            {transactions.map((t, i) => (
-              <div key={t.id} className="mb-1 border-b border-gray-100 pb-1">
-                <p>#{i + 1} ID: {t.id.slice(0, 8)}...</p>
-                <p>Raw TS: {t.timestamp} (Type: {typeof t.timestamp})</p>
-                <p>Parsed Key: {getMonthKeyFromTimestamp(t.timestamp)}</p>
-                <p>Date String: {new Date(Number(t.timestamp)).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 };
