@@ -36,15 +36,27 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
   const getMonthKeyFromTimestamp = (timestamp: number): string => {
     if (!timestamp) return 'Unknown';
     const date = new Date(timestamp);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric',
-      month: '2-digit',
-    });
-    const parts = formatter.formatToParts(date);
-    const year = parts.find(p => p.type === 'year')?.value;
-    const month = parts.find(p => p.type === 'month')?.value;
-    return `${year}-${month}`;
+
+    // Validate date
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid timestamp found:", timestamp);
+      return 'Unknown';
+    }
+
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+        month: '2-digit',
+      });
+      const parts = formatter.formatToParts(date);
+      const year = parts.find(p => p.type === 'year')?.value;
+      const month = parts.find(p => p.type === 'month')?.value;
+      return `${year}-${month}`;
+    } catch (e) {
+      console.error("Date formatting error:", e, timestamp);
+      return 'Unknown';
+    }
   };
 
   // 1. Extract Available Months
