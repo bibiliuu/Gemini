@@ -32,48 +32,19 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
 
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
 
-  // Helper to extract YYYY-MM from various date string formats
-  const getMonthKey = (dateStr: string): string => {
-    if (!dateStr || dateStr === '无日期' || dateStr === '') return 'Unknown';
-
-    // clean string
-    const clean = dateStr.replace(/\s/g, '');
-
-    // Try YYYY.MM.DD or YYYY-MM-DD
-    const fullMatch = clean.match(/(\d{4})[.\/-](\d{1,2})/);
-    if (fullMatch) {
-      return `${fullMatch[1]}-${fullMatch[2].padStart(2, '0')}`;
-    }
-
-    // Try MM.DD or MM-DD (Assume current year in Beijing)
-    const shortMatch = clean.match(/(\d{1,2})[.\/-](\d{1,2})/);
-    if (shortMatch) {
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric',
-      });
-      const year = formatter.format(new Date());
-      return `${year}-${shortMatch[1].padStart(2, '0')}`;
-    }
-
-    // Try Chinese format: YYYY年MM月 or MM月DD日
-    const chineseFullMatch = clean.match(/(\d{4})年(\d{1,2})月/);
-    if (chineseFullMatch) {
-      return `${chineseFullMatch[1]}-${chineseFullMatch[2].padStart(2, '0')}`;
-    }
-
-    const chineseShortMatch = clean.match(/(\d{1,2})月(\d{1,2})日?/);
-    if (chineseShortMatch) {
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Shanghai',
-        year: 'numeric',
-      });
-      const year = formatter.format(new Date());
-      return `${year}-${chineseShortMatch[1].padStart(2, '0')}`;
-    }
-
-    console.log("Unknown date format:", dateStr);
-    return 'Unknown';
+  // Helper to extract YYYY-MM from timestamp (Beijing Time)
+  const getMonthKeyFromTimestamp = (timestamp: number): string => {
+    if (!timestamp) return 'Unknown';
+    const date = new Date(timestamp);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+    });
+    const parts = formatter.formatToParts(date);
+    const year = parts.find(p => p.type === 'year')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    return `${year}-${month}`;
   };
 
   // 1. Extract Available Months
@@ -83,7 +54,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
     months.add(currentMonthKey);
 
     transactions.forEach(t => {
-      const m = getMonthKey(t.orderDate);
+      const m = getMonthKeyFromTimestamp(t.timestamp);
       if (m !== 'Unknown') months.add(m);
     });
     return Array.from(months).sort().reverse();
@@ -92,7 +63,7 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
   // 2. Filter Transactions
   const filteredTransactions = useMemo(() => {
     if (selectedMonth === 'ALL') return transactions;
-    return transactions.filter(t => getMonthKey(t.orderDate) === selectedMonth);
+    return transactions.filter(t => getMonthKeyFromTimestamp(t.timestamp) === selectedMonth);
   }, [transactions, selectedMonth]);
 
   // 3. Calculate Stats for Filtered View
