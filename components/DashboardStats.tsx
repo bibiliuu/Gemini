@@ -477,6 +477,14 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
         <p>Total Transactions: {transactions.length}</p>
         <p>Filtered Transactions: {filteredTransactions.length}</p>
         <p>Available Months: {availableMonths.join(', ')}</p>
+        {transactions.length > 0 && (
+          <div className="mt-2 border-t pt-2">
+            <p>First Transaction:</p>
+            <p>ID: {transactions[0].id}</p>
+            <p>Timestamp: {transactions[0].timestamp} ({new Date(transactions[0].timestamp).toISOString()})</p>
+            <p>Calculated Key: {getMonthKeyFromTimestamp(transactions[0].timestamp)}</p>
+          </div>
+        )}
       </div>
     </div>
   );
