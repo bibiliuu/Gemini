@@ -16,10 +16,18 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
   const [copied, setCopied] = useState(false);
   const isAdmin = userRole === 'admin';
 
-  // Calculate Current Month Key (YYYY-MM) for default state
+  // Calculate Current Month Key (YYYY-MM) for default state based on Beijing Time
   const currentMonthKey = useMemo(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: '2-digit',
+    });
+    const parts = formatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    return `${year}-${month}`;
   }, []);
 
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
