@@ -45,10 +45,14 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
       return `${fullMatch[1]}-${fullMatch[2].padStart(2, '0')}`;
     }
 
-    // Try MM.DD or MM-DD (Assume current year)
+    // Try MM.DD or MM-DD (Assume current year in Beijing)
     const shortMatch = clean.match(/(\d{1,2})[.\/-](\d{1,2})/);
     if (shortMatch) {
-      const year = new Date().getFullYear();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric',
+      });
+      const year = formatter.format(new Date());
       return `${year}-${shortMatch[1].padStart(2, '0')}`;
     }
 
