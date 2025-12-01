@@ -35,7 +35,15 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
   // Helper to extract YYYY-MM from timestamp (Beijing Time)
   const getMonthKeyFromTimestamp = (timestamp: number | string): string => {
     if (!timestamp) return 'Unknown';
-    const date = new Date(Number(timestamp));
+    let ts = Number(timestamp);
+
+    // Heuristic: If timestamp is small (e.g. < 100 billion), assume seconds and convert to ms
+    // Current ms timestamp is ~1.7e12. Seconds timestamp is ~1.7e9.
+    if (ts < 100000000000) {
+      ts *= 1000;
+    }
+
+    const date = new Date(ts);
 
     // Validate date
     if (isNaN(date.getTime())) {
