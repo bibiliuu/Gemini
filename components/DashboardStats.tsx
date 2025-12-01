@@ -457,6 +457,15 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
           </div>
         )}
       </div>
+      {/* Debug Info (Temporary) */}
+      <div className="text-xs text-gray-400 mt-8 p-4 border border-gray-100 rounded">
+        <p>Debug Info:</p>
+        <p>Current Month Key (Beijing): {currentMonthKey}</p>
+        <p>Selected Month: {selectedMonth}</p>
+        <p>Total Transactions: {transactions.length}</p>
+        <p>Filtered Transactions: {filteredTransactions.length}</p>
+        <p>Available Months: {availableMonths.join(', ')}</p>
+      </div>
     </div>
   );
 };
