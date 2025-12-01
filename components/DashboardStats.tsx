@@ -33,9 +33,9 @@ export const StatsDisplay: React.FC<Props> = ({ transactions, userRole }) => {
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
 
   // Helper to extract YYYY-MM from timestamp (Beijing Time)
-  const getMonthKeyFromTimestamp = (timestamp: number): string => {
+  const getMonthKeyFromTimestamp = (timestamp: number | string): string => {
     if (!timestamp) return 'Unknown';
-    const date = new Date(timestamp);
+    const date = new Date(Number(timestamp));
 
     // Validate date
     if (isNaN(date.getTime())) {
