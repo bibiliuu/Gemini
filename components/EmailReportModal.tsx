@@ -141,8 +141,8 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
   const [isSaving, setIsSaving] = React.useState(false);
 
   const handleDownloadExcel = () => {
-    // UPDATED COLUMNS: Status, Rank, Name, Taker Income, Controller Income, Superior Income, Total Income
-    const headers = ['状态', '排名', '姓名', '接单收入', '场控收入', '直属收入', '总收入'];
+    // UPDATED COLUMNS: Status, Name, Taker Income, Controller Income, Superior Income, Total Income
+    const headers = ['状态', '姓名', '接单收入', '场控收入', '直属收入', '总收入'];
     const titleText = `Muse Club 三日人员收入统计 (${dateRange.subjectStr})`;
 
     // CSS for Excel Styling
@@ -189,7 +189,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
       <body>
         <table>
           <thead>
-            <tr><th colspan="7" class="title-row">${titleText}</th></tr>
+            <tr><th colspan="6" class="title-row">${titleText}</th></tr>
             <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
           </thead>
           <tbody>
@@ -198,7 +198,6 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
                 <td class="${!p.isUnpaid ? 'status-paid' : 'status-unpaid'}">
                     ${!p.isUnpaid ? '已付' : '未付'}
                 </td>
-                <td>${i + 1}</td>
                 <td>${p.name}</td>
                 <td class="income-col">${p.takerIncome.toFixed(2)}</td>
                 <td class="income-col">${p.controllerIncome.toFixed(2)}</td>
@@ -207,7 +206,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
               </tr>
             `).join('')}
             <tr>
-                <td colspan="6" style="text-align:right; font-weight:bold; border-top: 2px solid #99f6e4;">总计:</td>
+                <td colspan="5" style="text-align:right; font-weight:bold; border-top: 2px solid #99f6e4;">总计:</td>
                 <td style="font-weight:bold; border-top: 2px solid #99f6e4;">¥${totalAmount.toFixed(2)}</td>
             </tr>
           </tbody>
@@ -277,7 +276,6 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
                 <thead>
                   <tr className="bg-teal-50 border-b border-teal-200 text-teal-800">
                     <th className="p-2 text-center w-12">状态</th>
-                    <th className="p-2 text-center w-12">排名</th>
                     <th className="p-2 text-center">姓名</th>
                     <th className="p-2 text-right text-green-700">接单收入</th>
                     <th className="p-2 text-right text-blue-700">场控收入</th>
@@ -287,7 +285,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {personStats.length === 0 ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-gray-400">该时间段内无已批准的记录</td></tr>
+                    <tr><td colSpan={6} className="p-8 text-center text-gray-400">该时间段内无已批准的记录</td></tr>
                   ) : (
                     personStats.map((p, i) => (
                       <tr key={p.name} className="hover:bg-gray-50">
@@ -298,7 +296,6 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
                             <span className="text-xs text-green-600 bg-green-100 px-1.5 py-0.5 rounded">未付</span>
                           )}
                         </td>
-                        <td className="p-2 text-center font-bold text-gray-400">{i + 1}</td>
                         <td className="p-2 text-center font-medium">{p.name}</td>
                         <td className="p-2 text-right text-green-700">¥{p.takerIncome.toFixed(2)}</td>
                         <td className="p-2 text-right text-blue-700">¥{p.controllerIncome.toFixed(2)}</td>
@@ -311,7 +308,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
                 {personStats.length > 0 && (
                   <tfoot>
                     <tr className="bg-gray-50 font-bold border-t border-gray-200">
-                      <td colSpan={6} className="p-3 text-right">总计:</td>
+                      <td colSpan={5} className="p-3 text-right">总计:</td>
                       <td className="p-3 text-right text-indigo-600">¥{totalAmount.toFixed(2)}</td>
                     </tr>
                   </tfoot>
