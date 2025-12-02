@@ -90,15 +90,53 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
 
   }, [transactions, isOpen, dateRange]);
 
-  const totalAmount = reportData.reduce((sum, t) => sum + t.amount, 0);
+  // 2.5 Aggregate Data by Person
+  const personStats = useMemo(() => {
+    const stats = new Map<string, {
+      name: string;
+      takerIncome: number;
+      controllerIncome: number;
+      superiorIncome: number;
+      totalIncome: number;
+    }>();
+
+    const addIncome = (name: string, type: 'taker' | 'controller' | 'superior', amount: number) => {
+      if (!name || name === '无' || amount <= 0) return;
+
+      const existing = stats.get(name) || {
+        name,
+        takerIncome: 0,
+        controllerIncome: 0,
+        superiorIncome: 0,
+        totalIncome: 0
+      };
+
+      if (type === 'taker') existing.takerIncome += amount;
+      if (type === 'controller') existing.controllerIncome += amount;
+      if (type === 'superior') existing.superiorIncome += amount;
+      existing.totalIncome += amount;
+
+      stats.set(name, existing);
+    };
+
+    reportData.forEach(t => {
+      addIncome(t.taker, 'taker', t.distribution.taker);
+      addIncome(t.controller, 'controller', t.distribution.controller);
+      addIncome(t.superior, 'superior', t.distribution.superior);
+    });
+
+    return Array.from(stats.values()).sort((a, b) => b.totalIncome - a.totalIncome);
+  }, [reportData]);
+
+  const totalAmount = personStats.reduce((sum, p) => sum + p.totalIncome, 0);
 
   // 3. Excel Download Handler
   const [isSaving, setIsSaving] = React.useState(false);
 
   const handleDownloadExcel = () => {
-    // UPDATED COLUMNS: Date, Taker, Taker Income, Controller Income, Superior Income, Total
-    const headers = ['序号', '下单日期', '接单人', '接单收入', '场控收入', '直属收入', '总金额'];
-    const titleText = `Muse Club 账单报告 (${dateRange.subjectStr})`;
+    // UPDATED COLUMNS: Name, Taker Income, Controller Income, Superior Income, Total Income
+    const headers = ['排名', '姓名', '接单收入', '场控收入', '直属收入', '总收入'];
+    const titleText = `Muse Club 三日人员收入统计 (${dateRange.subjectStr})`;
 
     // CSS for Excel Styling
     const styles = `
@@ -142,23 +180,22 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
       <body>
         <table>
           <thead>
-            <tr><th colspan="7" class="title-row">${titleText}</th></tr>
+            <tr><th colspan="6" class="title-row">${titleText}</th></tr>
             <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
           </thead>
           <tbody>
-            ${reportData.map((t, i) => `
+            ${personStats.map((p, i) => `
               <tr>
                 <td>${i + 1}</td>
-                <td>${t.orderDate || ''}</td>
-                <td>${t.taker}</td>
-                <td class="income-col">${t.distribution.taker.toFixed(2)}</td>
-                <td class="income-col">${t.distribution.controller.toFixed(2)}</td>
-                <td class="income-col">${t.distribution.superior.toFixed(2)}</td>
-                <td class="amount">${t.amount.toFixed(2)}</td>
+                <td>${p.name}</td>
+                <td class="income-col">${p.takerIncome.toFixed(2)}</td>
+                <td class="income-col">${p.controllerIncome.toFixed(2)}</td>
+                <td class="income-col">${p.superiorIncome.toFixed(2)}</td>
+                <td class="amount">${p.totalIncome.toFixed(2)}</td>
               </tr>
             `).join('')}
             <tr>
-                <td colspan="6" style="text-align:right; font-weight:bold; border-top: 2px solid #99f6e4;">总计:</td>
+                <td colspan="5" style="text-align:right; font-weight:bold; border-top: 2px solid #99f6e4;">总计:</td>
                 <td style="font-weight:bold; border-top: 2px solid #99f6e4;">¥${totalAmount.toFixed(2)}</td>
             </tr>
           </tbody>
@@ -172,7 +209,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
     const link = document.createElement('a');
     // Fix: Replace all slashes with dashes for valid filename
     const safeSubject = dateRange.subjectStr.replace(/\//g, '-');
-    const filename = `${safeSubject}_账单报告.xls`;
+    const filename = `${safeSubject}_人员收入统计.xls`;
 
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
@@ -204,7 +241,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
           <div>
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               <CalendarRange className="w-5 h-5 text-indigo-600" />
-              三日账单
+              三日人员收入统计
             </h2>
             <p className="text-sm text-gray-500 mt-1">
               北京时间范围: <span className="font-medium text-indigo-600">{dateRange.startStr} 至 {dateRange.endStr}</span>
@@ -219,7 +256,7 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
         <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-100">
           <div className="bg-white shadow-lg p-8 min-h-[400px] mx-auto max-w-[900px] border border-gray-200">
             <div className="text-center mb-6">
-              <h1 className="text-xl font-bold text-gray-900">Excel 报表预览</h1>
+              <h1 className="text-xl font-bold text-gray-900">人员收入统计预览</h1>
               <p className="text-gray-500 mt-2 text-sm">{dateRange.subjectStr}</p>
             </div>
 
@@ -227,42 +264,34 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
               <table className="w-full text-xs md:text-sm border-collapse">
                 <thead>
                   <tr className="bg-teal-50 border-b border-teal-200 text-teal-800">
-                    <th className="p-2 text-center w-12">状态</th>
-                    <th className="p-2 text-center">日期</th>
-                    <th className="p-2 text-center">接单人</th>
+                    <th className="p-2 text-center w-12">排名</th>
+                    <th className="p-2 text-center">姓名</th>
                     <th className="p-2 text-right text-green-700">接单收入</th>
                     <th className="p-2 text-right text-blue-700">场控收入</th>
                     <th className="p-2 text-right text-amber-700">直属收入</th>
-                    <th className="p-2 text-right text-gray-900">总金额</th>
+                    <th className="p-2 text-right text-gray-900">总收入</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {reportData.length === 0 ? (
-                    <tr><td colSpan={7} className="p-8 text-center text-gray-400">该时间段内无已批准的记录</td></tr>
+                  {personStats.length === 0 ? (
+                    <tr><td colSpan={6} className="p-8 text-center text-gray-400">该时间段内无已批准的记录</td></tr>
                   ) : (
-                    reportData.map((t) => (
-                      <tr key={t.id} className="hover:bg-gray-50">
-                        <td className="p-2 text-center">
-                          {t.status === 'paid' ? (
-                            <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">已付</span>
-                          ) : (
-                            <span className="text-xs text-green-600 bg-green-100 px-1.5 py-0.5 rounded">未付</span>
-                          )}
-                        </td>
-                        <td className="p-2 text-center font-medium">{t.orderDate}</td>
-                        <td className="p-2 text-center">{t.taker}</td>
-                        <td className="p-2 text-right text-green-700">¥{t.distribution.taker.toFixed(2)}</td>
-                        <td className="p-2 text-right text-blue-700">¥{t.distribution.controller.toFixed(2)}</td>
-                        <td className="p-2 text-right text-amber-700">¥{t.distribution.superior.toFixed(2)}</td>
-                        <td className="p-2 text-right font-bold text-gray-900">¥{t.amount.toFixed(2)}</td>
+                    personStats.map((p, i) => (
+                      <tr key={p.name} className="hover:bg-gray-50">
+                        <td className="p-2 text-center font-bold text-gray-400">{i + 1}</td>
+                        <td className="p-2 text-center font-medium">{p.name}</td>
+                        <td className="p-2 text-right text-green-700">¥{p.takerIncome.toFixed(2)}</td>
+                        <td className="p-2 text-right text-blue-700">¥{p.controllerIncome.toFixed(2)}</td>
+                        <td className="p-2 text-right text-amber-700">¥{p.superiorIncome.toFixed(2)}</td>
+                        <td className="p-2 text-right font-bold text-gray-900">¥{p.totalIncome.toFixed(2)}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
-                {reportData.length > 0 && (
+                {personStats.length > 0 && (
                   <tfoot>
                     <tr className="bg-gray-50 font-bold border-t border-gray-200">
-                      <td colSpan={6} className="p-3 text-right">总计:</td>
+                      <td colSpan={5} className="p-3 text-right">总计:</td>
                       <td className="p-3 text-right text-indigo-600">¥{totalAmount.toFixed(2)}</td>
                     </tr>
                   </tfoot>
@@ -292,7 +321,6 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
             下载 Excel 报表
           </button>
         </div>
-
       </div>
     </div>
   );
