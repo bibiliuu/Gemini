@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+// @ts-ignore
+import * as XLSX from 'xlsx-js-style';
 import { TransactionRecord } from '../types';
 import { X, FileSpreadsheet, CalendarRange, Download, CheckCheck } from 'lucide-react';
 
@@ -141,92 +143,102 @@ export const EmailReportModal: React.FC<Props> = ({ transactions, isOpen, onClos
   const [isSaving, setIsSaving] = React.useState(false);
 
   const handleDownloadExcel = () => {
-    // UPDATED COLUMNS: Status, Name, Taker Income, Controller Income, Superior Income, Total Income
+    // 1. Prepare Data
     const headers = ['状态', '姓名', '接单收入', '场控收入', '直属收入', '总收入'];
-    const titleText = `Muse Club 三日人员收入统计 (${dateRange.subjectStr})`;
 
-    // CSS for Excel Styling
-    const styles = `
-      <style>
-        body { font-family: 'Microsoft YaHei', 'SimHei', sans-serif; }
-        table { border-collapse: collapse; width: 100%; }
-        th { 
-          background-color: #99f6e4; /* Teal-200 */
-          color: #115e59; /* Teal-800 */
-          border: 1px solid #5eead4; 
-          padding: 10px; 
-          text-align: center; 
-          font-weight: bold;
-        }
-        td { 
-          border: 1px solid #ccfbf1; 
-          padding: 8px; 
-          color: #333;
-          text-align: center;
-        }
-        .title-row {
-            font-size: 18px;
-            font-weight: bold;
-            background-color: #ffffff;
-            color: #000000;
-            border: none;
-            padding: 15px;
-        }
-        tr:nth-child(even) { background-color: #f0fdfa; }
-        .amount { font-weight: bold; }
-        .income-col { color: #555; }
-        .status-paid { color: #7e22ce; font-weight: bold; }
-        .status-unpaid { color: #059669; }
-      </style>
-    `;
+    const data = personStats.map((p, i) => [
+      !p.isUnpaid ? '已付' : '未付',
+      p.name,
+      p.takerIncome,
+      p.controllerIncome,
+      p.superiorIncome,
+      p.totalIncome
+    ]);
 
-    const tableHtml = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="UTF-8">
-        ${styles}
-      </head>
-      <body>
-        <table>
-          <thead>
-            <tr><th colspan="6" class="title-row">${titleText}</th></tr>
-            <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
-          </thead>
-          <tbody>
-            ${personStats.map((p, i) => `
-              <tr>
-                <td class="${!p.isUnpaid ? 'status-paid' : 'status-unpaid'}">
-                    ${!p.isUnpaid ? '已付' : '未付'}
-                </td>
-                <td>${p.name}</td>
-                <td class="income-col">${p.takerIncome.toFixed(2)}</td>
-                <td class="income-col">${p.controllerIncome.toFixed(2)}</td>
-                <td class="income-col">${p.superiorIncome.toFixed(2)}</td>
-                <td class="amount">${p.totalIncome.toFixed(2)}</td>
-              </tr>
-            `).join('')}
-            <tr>
-                <td colspan="5" style="text-align:right; font-weight:bold; border-top: 2px solid #99f6e4;">总计:</td>
-                <td style="font-weight:bold; border-top: 2px solid #99f6e4;">¥${totalAmount.toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
+    // Add Total Row
+    data.push(['', '总计', 0, 0, 0, totalAmount]);
 
-    const blob = new Blob(['\uFEFF', tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    // 2. Create Worksheet
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+    // 3. Define Styles
+    const headerStyle = {
+      fill: { fgColor: { rgb: "99F6E4" } }, // Teal-200
+      font: { bold: true, color: { rgb: "115E59" } }, // Teal-800
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin", color: { rgb: "5EEAD4" } },
+        bottom: { style: "thin", color: { rgb: "5EEAD4" } },
+        left: { style: "thin", color: { rgb: "5EEAD4" } },
+        right: { style: "thin", color: { rgb: "5EEAD4" } }
+      }
+    };
+
+    const cellStyle = {
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin", color: { rgb: "CCFBF1" } },
+        bottom: { style: "thin", color: { rgb: "CCFBF1" } },
+        left: { style: "thin", color: { rgb: "CCFBF1" } },
+        right: { style: "thin", color: { rgb: "CCFBF1" } }
+      }
+    };
+
+    const paidStyle = { ...cellStyle, font: { bold: true, color: { rgb: "7E22CE" } } }; // Purple
+    const unpaidStyle = { ...cellStyle, font: { color: { rgb: "059669" } } }; // Green
+    const totalLabelStyle = { ...cellStyle, font: { bold: true }, alignment: { horizontal: "right" } };
+    const totalValueStyle = { ...cellStyle, font: { bold: true, color: { rgb: "4F46E5" } } }; // Indigo
+
+    // 4. Apply Styles
+    const range = XLSX.utils.decode_range(ws['!ref']!);
+
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[cell_address]) continue;
+
+        // Header Row
+        if (R === 0) {
+          ws[cell_address].s = headerStyle;
+        }
+        // Data Rows
+        else if (R <= personStats.length) {
+          // Status Column (0)
+          if (C === 0) {
+            const val = ws[cell_address].v;
+            ws[cell_address].s = val === '已付' ? paidStyle : unpaidStyle;
+          } else {
+            ws[cell_address].s = cellStyle;
+          }
+        }
+        // Total Row
+        else {
+          if (C === 1) ws[cell_address].s = totalLabelStyle;
+          else if (C === 5) ws[cell_address].s = totalValueStyle;
+          else ws[cell_address].s = cellStyle;
+        }
+      }
+    }
+
+    // 5. Set Column Widths
+    ws['!cols'] = [
+      { wch: 10 }, // Status
+      { wch: 15 }, // Name
+      { wch: 12 }, // Income
+      { wch: 12 }, // Income
+      { wch: 12 }, // Income
+      { wch: 15 }  // Total
+    ];
+
+    // 6. Generate File
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "收入统计");
+
     // Fix: Replace all slashes with dashes for valid filename
     const safeSubject = dateRange.subjectStr.replace(/\//g, '-');
-    const filename = `${safeSubject}_人员收入统计.xls`;
+    const filename = `${safeSubject}_人员收入统计.xlsx`;
 
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    XLSX.writeFile(wb, filename);
   };
 
   const handleMarkAllPaid = async () => {
