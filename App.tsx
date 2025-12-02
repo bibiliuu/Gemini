@@ -599,11 +599,38 @@ function AppContent() {
   };
 
 
-  const handleBatchMarkAsPaid = (ids: string[]) => {
+  const handleBatchMarkAsPaid = async (ids: string[]) => {
     if (!isAdmin) return;
+
+    // Optimistic Update
     setTransactions(prev => prev.map(t =>
       ids.includes(t.id) ? { ...t, status: 'paid' } : t
     ));
+
+    const API_URL = import.meta.env.DEV ? 'http://localhost:3000/api/transactions' : '/api/transactions';
+
+    try {
+      // Use Promise.all for parallel updates
+      await Promise.all(ids.map(id => {
+        const t = transactions.find(tr => tr.id === id);
+        if (!t) return Promise.resolve();
+        
+        return fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...t,
+            status: 'paid'
+          })
+        }).then(res => {
+            if (!res.ok) throw new Error(`Failed to update ${id}`);
+        });
+      }));
+      showSuccess("✅ 已全部标记为已付 (All Marked Paid)");
+    } catch (e) {
+      console.error("Batch update failed", e);
+      alert("部分更新失败，请刷新页面查看最新状态");
+    }
   };
 
   const handleRejectModal = () => {
