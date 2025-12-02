@@ -40,8 +40,8 @@ export const ReviewModal: React.FC<Props> = ({ initialData, initialConfig, image
   // Initialize with passed config OR defaults
   const [localConfig, setLocalConfig] = useState<DistributionConfig>(initialConfig || {
     takerPercentage: 80,
-    controllerPercentage: 15,
-    superiorPercentage: 5
+    controllerPercentage: 20, // Updated from 15
+    superiorPercentage: 15    // Updated from 5
   });
 
   const { takerPercentage, controllerPercentage, superiorPercentage } = localConfig;
